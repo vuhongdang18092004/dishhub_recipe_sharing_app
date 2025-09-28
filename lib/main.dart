@@ -13,20 +13,20 @@ import 'features/auth/presentation/screens/login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // Khởi tạo Firebase
+  await Firebase.initializeApp(); //khởi tạo firebase
 
   final firebaseAuth = FirebaseAuth.instance;
   final firestore = FirebaseFirestore.instance;
   final googleSignIn = GoogleSignIn();
 
-  // tạo datasource
+  //tạo datasource
   final remoteDataSource = AuthRemoteDataSourceImpl(
     firebaseAuth,
     firestore,
     googleSignIn,
   );
 
-  // tạo repository
+  //tạo repository
   final authRepository = AuthRepositoryImpl(remoteDataSource);
 
   runApp(MyApp(authRepository: authRepository));
