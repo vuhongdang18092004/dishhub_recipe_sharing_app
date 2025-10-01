@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cached_network_image/cached_network_image.dart'; // Import
-import 'home_page.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../domain/entities/user_entity.dart';
 import '../bloc/auth_bloc.dart';
 
 class LoginPage extends StatefulWidget {
@@ -16,7 +17,6 @@ class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  // URL Logo bạn cung cấp
   final String logoUrl =
       "https://global-web-assets.cpcdn.com/assets/logo_circle-d106f02123de882fffdd2c06593eb2fd33f0ddf20418dd75ed72225bdb0e0ff7.png";
 
@@ -33,19 +33,30 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(title: const Text("Đăng nhập"), elevation: 0),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthAuthenticated) {
+          if (state is AuthAuthenticated && state.user != null) {
+            final user = UserEntity(
+              id: state.user.id,
+              name: state.user.name,
+              email: state.user.email,
+              photo: state.user.photo,
+              role: state.user.role,
+              vip: state.user.vip,
+              recipes: state.user.recipes,
+              followers: state.user.followers,
+              following: state.user.following,
+              savedRecipes: state.user.savedRecipes,
+            );
+
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Xin chào ${state.user.name}!")),
+              SnackBar(content: Text("Xin chào ${user.name}!")),
             );
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => HomePage(user: state.user)),
-            );
+            context.go("/home", extra: user);
           }
+
           if (state is AuthError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
           }
         },
         builder: (context, state) {
@@ -84,7 +95,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-
                   const Center(
                     child: Text(
                       "Chào mừng đến với DishHub",
@@ -128,8 +138,8 @@ class _LoginPageState extends State<LoginPage> {
                     child: TextButton(
                       onPressed: () {
                         context.read<AuthBloc>().add(
-                          AuthResetPassword(email: emailController.text),
-                        );
+                              AuthResetPassword(email: emailController.text),
+                            );
                       },
                       child: const Text(
                         "Quên mật khẩu?",
@@ -142,11 +152,11 @@ class _LoginPageState extends State<LoginPage> {
                   ElevatedButton(
                     onPressed: () {
                       context.read<AuthBloc>().add(
-                        AuthSignInEmail(
-                          email: emailController.text,
-                          password: passwordController.text,
-                        ),
-                      );
+                            AuthSignInEmail(
+                              email: emailController.text,
+                              password: passwordController.text,
+                            ),
+                          );
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 15),
@@ -158,10 +168,8 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     child: const Text(
                       "ĐĂNG NHẬP",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -182,7 +190,6 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () {
                       context.read<AuthBloc>().add(AuthSignInGoogle());
                     },
-                    
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.black87,
@@ -190,15 +197,11 @@ class _LoginPageState extends State<LoginPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
                       ),
-
                       side: const BorderSide(color: Colors.grey, width: 0.5),
-                      elevation:
-                          2, 
+                      elevation: 2,
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment
-                          .center,
-                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text(
                           "Đăng nhập với",
@@ -208,10 +211,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Image.asset(
-                          'assets/google_icon.png',
-                          height: 24,
-                        ),
+                        Image.asset('assets/google_icon.png', height: 24),
                       ],
                     ),
                   ),
