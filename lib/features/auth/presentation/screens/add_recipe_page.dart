@@ -6,10 +6,6 @@ class AddRecipePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Add Recipe"),
-        centerTitle: true,
-      ),
       body: const Center(
         child: Text(
           "Đây là trang Add Recipe",

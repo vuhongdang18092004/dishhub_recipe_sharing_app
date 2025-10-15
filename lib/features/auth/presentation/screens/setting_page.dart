@@ -12,10 +12,6 @@ class SettingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Cài đặt"),
-        centerTitle: true,
-      ),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [

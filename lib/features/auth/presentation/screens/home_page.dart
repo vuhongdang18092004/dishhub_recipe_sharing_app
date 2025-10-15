@@ -9,7 +9,6 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Trang chính")),
       body: Center(
         child: Text(
           "Hello, ${user.name}!",
