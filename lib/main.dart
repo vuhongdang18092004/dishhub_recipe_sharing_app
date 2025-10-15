@@ -6,12 +6,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:go_router/go_router.dart';
 
+import 'config/theme.dart';
+import 'config/app_router.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/domain/usecases/auth_usecases.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/data/datasources/firebase_auth_datasource.dart';
-import 'features/auth/presentation/screens/login_page.dart';
-import 'config/app_router.dart';
 import 'features/auth/domain/entities/user_entity.dart';
 
 void main() async {
@@ -56,6 +56,9 @@ void main() async {
 class MyApp extends StatelessWidget {
   final AuthRepositoryImpl authRepository;
   final UserEntity? initialUser;
+  
+  static final ValueNotifier<ThemeMode> themeNotifier =
+      ValueNotifier(ThemeMode.light);
 
   const MyApp({super.key, required this.authRepository, this.initialUser});
 
@@ -70,9 +73,17 @@ class MyApp extends StatelessWidget {
         signOut: SignOut(authRepository),
         getCurrentUser: GetCurrentUser(authRepository),
       ),
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        routerConfig: AppRouter(initialUser: initialUser).router,
+      child: ValueListenableBuilder<ThemeMode>(
+        valueListenable: themeNotifier,
+        builder: (context, themeMode, _) {
+          return MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            theme: AppThemes.lightTheme,
+            darkTheme: AppThemes.darkTheme,
+            themeMode: themeMode,
+            routerConfig: AppRouter(initialUser: initialUser).router,
+          );
+        },
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../main.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -12,10 +13,11 @@ class AppDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.green,
+            decoration: BoxDecoration(color: Color.fromRGBO(240, 144, 48, 1)),
+            child: Text(
+              'Menu',
+              style: TextStyle(color: Colors.white, fontSize: 24),
             ),
-            child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
           ),
           ListTile(
             leading: const Icon(Icons.home),
@@ -30,7 +32,7 @@ class AppDrawer extends StatelessWidget {
             title: const Text('Add Recipe'),
             onTap: () {
               Navigator.pop(context);
-              context.go('/add'); 
+              context.go('/add');
             },
           ),
           ListTile(
@@ -39,6 +41,24 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               context.go('/settings');
+            },
+          ),
+          const Divider(),
+          SwitchListTile(
+            secondary: Icon(
+              MyApp.themeNotifier.value == ThemeMode.dark
+                  ? Icons.nightlight_round 
+                  : Icons.wb_sunny,
+              color: MyApp.themeNotifier.value == ThemeMode.dark
+                  ? Colors.yellow
+                  : Colors.orange,
+            ),
+            title: const Text('Dark Mode'),
+            value: MyApp.themeNotifier.value == ThemeMode.dark,
+            onChanged: (val) {
+              MyApp.themeNotifier.value = val
+                  ? ThemeMode.dark
+                  : ThemeMode.light;
             },
           ),
         ],
