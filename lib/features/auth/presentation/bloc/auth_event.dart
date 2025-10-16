@@ -55,3 +55,13 @@ class AuthSignOut extends AuthEvent {
 class AuthCheckStatus extends AuthEvent {
   const AuthCheckStatus();
 }
+
+class AuthUpdateAvatar extends AuthEvent {
+  final String newAvatarUrl;
+
+  const AuthUpdateAvatar(this.newAvatarUrl);
+
+  @override
+  List<Object?> get props => [newAvatarUrl];
+}
+

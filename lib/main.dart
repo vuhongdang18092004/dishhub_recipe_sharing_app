@@ -13,8 +13,11 @@ import 'features/auth/domain/usecases/auth_usecases.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/data/datasources/firebase_auth_datasource.dart';
 import 'features/auth/domain/entities/user_entity.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 void main() async {
+  await dotenv.load(fileName: ".env");
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
@@ -72,7 +75,7 @@ class MyApp extends StatelessWidget {
         resetPassword: ResetPassword(authRepository),
         signOut: SignOut(authRepository),
         getCurrentUser: GetCurrentUser(authRepository),
-      ),
+      )..add(const AuthCheckStatus()),
       child: ValueListenableBuilder<ThemeMode>(
         valueListenable: themeNotifier,
         builder: (context, themeMode, _) {

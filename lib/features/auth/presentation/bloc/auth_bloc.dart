@@ -26,7 +26,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSignUp>((event, emit) async {
       emit(AuthLoading());
       try {
-        final user = await signUpWithEmail(event.email, event.password, event.name);
+        final user = await signUpWithEmail(
+          event.email,
+          event.password,
+          event.name,
+        );
         emit(AuthAuthenticated(user));
       } catch (e) {
         emit(AuthError(e.toString()));
@@ -73,6 +77,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthAuthenticated(user));
       } else {
         emit(AuthSignedOut());
+      }
+    });
+
+    on<AuthUpdateAvatar>((event, emit) {
+      final currentState = state;
+      if (currentState is AuthAuthenticated) {
+        final updatedUser = currentState.user.copyWith(
+          photo: event.newAvatarUrl,
+        );
+        emit(AuthAuthenticated(updatedUser));
       }
     });
   }
