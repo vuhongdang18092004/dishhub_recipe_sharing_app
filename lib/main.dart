@@ -5,16 +5,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'config/theme.dart';
 import 'config/app_router.dart';
+
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/domain/usecases/auth_usecases.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/data/datasources/firebase_auth_datasource.dart';
 import 'features/auth/domain/entities/user_entity.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'features/recipe/presentation/bloc/recipe_bloc.dart';
+import 'features/recipe/domain/usecases/recipe_usecases.dart';
+import 'features/recipe/data/repositories/recipe_repository_impl.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -25,14 +29,18 @@ void main() async {
   final firestore = FirebaseFirestore.instance;
   final googleSignIn = GoogleSignIn();
 
-  final remoteDataSource = AuthRemoteDataSourceImpl(
+  // Auth repository
+  final authRemoteDataSource = AuthRemoteDataSourceImpl(
     firebaseAuth,
     firestore,
     googleSignIn,
   );
+  final authRepository = AuthRepositoryImpl(authRemoteDataSource);
 
-  final authRepository = AuthRepositoryImpl(remoteDataSource);
+  // Recipe repository
+  final recipeRepository = RecipeRepositoryImpl(firestore);
 
+  // Kiểm tra user hiện tại
   UserEntity? initialUser;
   final currentUser = firebaseAuth.currentUser;
   if (currentUser != null) {
@@ -53,41 +61,55 @@ void main() async {
     }
   }
 
-  runApp(MyApp(authRepository: authRepository, initialUser: initialUser));
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(
+          create: (_) => AuthBloc(
+            signUpWithEmail: SignUpWithEmail(authRepository),
+            signInWithEmail: SignInWithEmail(authRepository),
+            signInWithGoogle: SignInWithGoogle(authRepository),
+            resetPassword: ResetPassword(authRepository),
+            signOut: SignOut(authRepository),
+            getCurrentUser: GetCurrentUser(authRepository),
+          )..add(const AuthCheckStatus()),
+        ),
+        BlocProvider<RecipeBloc>(
+          create: (_) => RecipeBloc(
+            getAllRecipes: GetAllRecipes(recipeRepository),
+            getRecipeById: GetRecipeById(recipeRepository),
+            addRecipe: AddRecipe(recipeRepository),
+            updateRecipe: UpdateRecipe(recipeRepository),
+            deleteRecipe: DeleteRecipe(recipeRepository),
+          )..add(LoadAllRecipes()),
+        ),
+      ],
+      child: MyApp(initialUser: initialUser),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  final AuthRepositoryImpl authRepository;
   final UserEntity? initialUser;
-  
+
   static final ValueNotifier<ThemeMode> themeNotifier =
       ValueNotifier(ThemeMode.light);
 
-  const MyApp({super.key, required this.authRepository, this.initialUser});
+  const MyApp({super.key, this.initialUser});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => AuthBloc(
-        signUpWithEmail: SignUpWithEmail(authRepository),
-        signInWithEmail: SignInWithEmail(authRepository),
-        signInWithGoogle: SignInWithGoogle(authRepository),
-        resetPassword: ResetPassword(authRepository),
-        signOut: SignOut(authRepository),
-        getCurrentUser: GetCurrentUser(authRepository),
-      )..add(const AuthCheckStatus()),
-      child: ValueListenableBuilder<ThemeMode>(
-        valueListenable: themeNotifier,
-        builder: (context, themeMode, _) {
-          return MaterialApp.router(
-            debugShowCheckedModeBanner: false,
-            theme: AppThemes.lightTheme,
-            darkTheme: AppThemes.darkTheme,
-            themeMode: themeMode,
-            routerConfig: AppRouter(initialUser: initialUser).router,
-          );
-        },
-      ),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, themeMode, _) {
+        return MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          theme: AppThemes.lightTheme,
+          darkTheme: AppThemes.darkTheme,
+          themeMode: themeMode,
+          routerConfig: AppRouter(initialUser: initialUser).router,
+        );
+      },
     );
   }
 }
