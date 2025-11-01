@@ -107,7 +107,6 @@ class _AddRecipePageState extends State<AddRecipePage> {
                 setState(() {
                   steps.add(
                     RecipeStep(
-                      title: _stepTitleController.text.trim(),
                       description: _stepDescController.text.trim(),
                       photoUrl: stepPhoto?.path,
                     ),
@@ -186,7 +185,6 @@ class _AddRecipePageState extends State<AddRecipePage> {
       }
       uploadedSteps.add(
         RecipeStep(
-          title: step.title,
           description: step.description,
           photoUrl: stepUrl,
         ),
@@ -372,7 +370,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
                                 fit: BoxFit.cover,
                               )
                             : null,
-                        title: Text('${i + 1}. ${step.title}'),
+                        title: Text('${i + 1}.'),
                         subtitle: Text(step.description),
                         trailing: IconButton(
                           icon: const Icon(Icons.delete),

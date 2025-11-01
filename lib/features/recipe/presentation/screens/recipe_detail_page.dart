@@ -193,7 +193,7 @@ class RecipeDetailPage extends StatelessWidget {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  step.title,
+                                  'Bước ${i + 1}',
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
