@@ -36,7 +36,8 @@ class RecipeDetailPage extends StatelessWidget {
           children: [
             if (recipe.photoUrls.isNotEmpty)
               GestureDetector(
-                onTap: () => _openZoomableImage(context, recipe.photoUrls.first),
+                onTap: () =>
+                    _openZoomableImage(context, recipe.photoUrls.first),
                 child: Hero(
                   tag: recipe.photoUrls.first,
                   child: ClipRRect(
@@ -104,10 +105,13 @@ class RecipeDetailPage extends StatelessWidget {
                 color: Colors.white,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: recipe.ingredients.map((ing) {
@@ -116,7 +120,11 @@ class RecipeDetailPage extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.circle, size: 6, color: Colors.orangeAccent),
+                            const Icon(
+                              Icons.circle,
+                              size: 6,
+                              color: Colors.orangeAccent,
+                            ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
@@ -142,8 +150,10 @@ class RecipeDetailPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  const Icon(Icons.format_list_numbered_rounded,
-                      color: Colors.deepOrange),
+                  const Icon(
+                    Icons.format_list_numbered_rounded,
+                    color: Colors.deepOrange,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Các bước thực hiện',
@@ -180,8 +190,9 @@ class RecipeDetailPage extends StatelessWidget {
                             children: [
                               CircleAvatar(
                                 radius: 16,
-                                backgroundColor:
-                                    Colors.deepOrange.withOpacity(0.15),
+                                backgroundColor: Colors.deepOrange.withOpacity(
+                                  0.15,
+                                ),
                                 child: Text(
                                   '${i + 1}',
                                   style: const TextStyle(

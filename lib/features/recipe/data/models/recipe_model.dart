@@ -17,19 +17,19 @@ class RecipeModel extends RecipeEntity {
     List<RecipeComment> comments = const [],
     List<String> tags = const [],
   }) : super(
-          id: id,
-          title: title,
-          description: description,
-          photoUrls: photoUrls,
-          videoUrl: videoUrl,
-          creatorId: creatorId,
-          ingredients: ingredients,
-          steps: steps,
-          likes: likes,
-          savedBy: savedBy,
-          comments: comments,
-          tags: tags, 
-        );
+         id: id,
+         title: title,
+         description: description,
+         photoUrls: photoUrls,
+         videoUrl: videoUrl,
+         creatorId: creatorId,
+         ingredients: ingredients,
+         steps: steps,
+         likes: likes,
+         savedBy: savedBy,
+         comments: comments,
+         tags: tags,
+       );
 
   factory RecipeModel.fromMap(Map<String, dynamic> map, String docId) {
     return RecipeModel(
@@ -48,7 +48,7 @@ class RecipeModel extends RecipeEntity {
       comments: (map['comments'] as List<dynamic>? ?? [])
           .map((e) => RecipeComment.fromMap(e))
           .toList(),
-      tags: List<String>.from(map['tags'] ?? []), 
+      tags: List<String>.from(map['tags'] ?? []),
     );
   }
 

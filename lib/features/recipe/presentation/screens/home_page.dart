@@ -44,12 +44,12 @@ class HomePage extends StatelessWidget {
           return const SizedBox();
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/add');
-        },
-        child: const Icon(Icons.add),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     Navigator.pushNamed(context, '/add');
+      //   },
+      //   child: const Icon(Icons.add),
+      // ),
     );
   }
 }

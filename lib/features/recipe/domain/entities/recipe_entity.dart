@@ -6,15 +6,14 @@ class RecipeEntity {
   final String title;
   final String description;
   final List<String> photoUrls;
-  final String? videoUrl;    
+  final String? videoUrl;
   final String creatorId;
   final List<String> ingredients;
   final List<RecipeStep> steps;
   final List<String> likes;
   final List<String> savedBy;
   final List<RecipeComment> comments;
-   final List<String> tags;
-
+  final List<String> tags;
 
   const RecipeEntity({
     required this.id,

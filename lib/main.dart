@@ -28,8 +28,7 @@ void main() async {
   final firebaseAuth = FirebaseAuth.instance;
   final firestore = FirebaseFirestore.instance;
   final googleSignIn = GoogleSignIn();
-
-  // Auth repository
+  
   final authRemoteDataSource = AuthRemoteDataSourceImpl(
     firebaseAuth,
     firestore,
@@ -37,10 +36,8 @@ void main() async {
   );
   final authRepository = AuthRepositoryImpl(authRemoteDataSource);
 
-  // Recipe repository
   final recipeRepository = RecipeRepositoryImpl(firestore);
 
-  // Kiểm tra user hiện tại
   UserEntity? initialUser;
   final currentUser = firebaseAuth.currentUser;
   if (currentUser != null) {
