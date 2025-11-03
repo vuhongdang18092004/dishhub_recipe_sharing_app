@@ -8,13 +8,16 @@ class RecipeRepositoryImpl implements RecipeRepository {
   final CollectionReference recipesCollection;
 
   RecipeRepositoryImpl(this.firestore)
-      : recipesCollection = firestore.collection('recipes');
+    : recipesCollection = firestore.collection('recipes');
 
   @override
   Future<List<RecipeEntity>> getAllRecipes() async {
     final snapshot = await recipesCollection.get();
     return snapshot.docs
-        .map((doc) => RecipeModel.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+        .map(
+          (doc) =>
+              RecipeModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
+        )
         .toList();
   }
 
@@ -41,7 +44,7 @@ class RecipeRepositoryImpl implements RecipeRepository {
       savedBy: recipe.savedBy,
       comments: recipe.comments,
       tags: recipe.tags,
-      searchKeywords: recipe.searchKeywords, 
+      searchKeywords: recipe.searchKeywords,
     );
     await recipesCollection.add(recipeModel.toMap());
   }
@@ -79,9 +82,13 @@ class RecipeRepositoryImpl implements RecipeRepository {
 
     // If user already liked, remove; otherwise add. Use atomic updates to avoid races.
     if (likes.contains(userId)) {
-      await docRef.update({'likes': FieldValue.arrayRemove([userId])});
+      await docRef.update({
+        'likes': FieldValue.arrayRemove([userId]),
+      });
     } else {
-      await docRef.update({'likes': FieldValue.arrayUnion([userId])});
+      await docRef.update({
+        'likes': FieldValue.arrayUnion([userId]),
+      });
     }
   }
   // *** HẾT PHẦN CỦA ĐỒNG ĐỘI ***
@@ -106,5 +113,6 @@ class RecipeRepositoryImpl implements RecipeRepository {
         )
         .toList();
   }
+
   // *** HẾT PHẦN CỦA BẠN ***
 }

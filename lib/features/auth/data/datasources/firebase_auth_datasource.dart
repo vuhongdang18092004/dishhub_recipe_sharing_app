@@ -124,12 +124,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     if (savedRecipes.contains(recipeId)) {
       // Remove recipe from saved list (use atomic arrayRemove to avoid races)
       print('Removing recipe $recipeId from user $userId savedRecipes');
-      await userDoc.update({'savedRecipes': FieldValue.arrayRemove([recipeId])});
+      await userDoc.update({
+        'savedRecipes': FieldValue.arrayRemove([recipeId]),
+      });
 
       // Also remove userId from recipe.savedBy atomically
       try {
         final recipeDocRef = _firestore.collection('recipes').doc(recipeId);
-        await recipeDocRef.update({'savedBy': FieldValue.arrayRemove([userId])});
+        await recipeDocRef.update({
+          'savedBy': FieldValue.arrayRemove([userId]),
+        });
       } catch (e) {
         // Non-fatal: log and continue
         print('Failed to arrayRemove recipe.savedBy: $e');
@@ -137,12 +141,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } else {
       // Add recipe to saved list (use atomic arrayUnion to avoid races)
       print('Adding recipe $recipeId to user $userId savedRecipes');
-      await userDoc.update({'savedRecipes': FieldValue.arrayUnion([recipeId])});
+      await userDoc.update({
+        'savedRecipes': FieldValue.arrayUnion([recipeId]),
+      });
 
       // Also add userId to recipe.savedBy atomically
       try {
         final recipeDocRef = _firestore.collection('recipes').doc(recipeId);
-        await recipeDocRef.update({'savedBy': FieldValue.arrayUnion([userId])});
+        await recipeDocRef.update({
+          'savedBy': FieldValue.arrayUnion([userId]),
+        });
       } catch (e) {
         // Non-fatal: log and continue
         print('Failed to arrayUnion recipe.savedBy: $e');

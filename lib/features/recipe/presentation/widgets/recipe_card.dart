@@ -81,11 +81,16 @@ class RecipeCard extends StatelessWidget {
                           InkWell(
                             onTap: user != null
                                 ? () {
-                                    print('RecipeCard: like tapped for ${recipe.id}');
+                                    print(
+                                      'RecipeCard: like tapped for ${recipe.id}',
+                                    );
                                     // dispatch to RecipeBloc
                                     context.read<RecipeBloc>().add(
-                                          ToggleLike(recipeId: recipe.id, userId: user.id),
-                                        );
+                                      ToggleLike(
+                                        recipeId: recipe.id,
+                                        userId: user.id,
+                                      ),
+                                    );
                                   }
                                 : null,
                             borderRadius: BorderRadius.circular(20),
@@ -94,9 +99,13 @@ class RecipeCard extends StatelessWidget {
                               child: Row(
                                 children: [
                                   Icon(
-                                    recipe.likes.contains(user?.id) ? Icons.thumb_up : Icons.thumb_up_off_alt,
+                                    recipe.likes.contains(user?.id)
+                                        ? Icons.thumb_up
+                                        : Icons.thumb_up_off_alt,
                                     size: 20,
-                                    color: recipe.likes.contains(user?.id) ? Colors.blue : Colors.grey,
+                                    color: recipe.likes.contains(user?.id)
+                                        ? Colors.blue
+                                        : Colors.grey,
                                   ),
                                   const SizedBox(width: 4),
                                   Text('${recipe.likes.length}'),

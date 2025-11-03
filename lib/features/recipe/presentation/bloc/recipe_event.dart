@@ -40,7 +40,6 @@ class ToggleLike extends RecipeEvent {
 }
 // *** HẾT PHẦN CỦA ĐỒNG ĐỘI ***
 
-
 // *** PHẦN CỦA BẠN (ĐÃ THÊM VÀO) ***
 class SearchRecipesEvent extends RecipeEvent {
   final String query;

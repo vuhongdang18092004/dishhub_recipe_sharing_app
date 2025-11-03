@@ -84,8 +84,10 @@ void main() async {
             addRecipe: AddRecipe(recipeRepository),
             updateRecipe: UpdateRecipe(recipeRepository),
             deleteRecipe: DeleteRecipe(recipeRepository),
-            toggleLikeRecipe: ToggleLikeRecipe(recipeRepository), // <-- Của đồng đội
-            searchRecipes: SearchRecipes(recipeRepository),     // <-- Của bạn
+            toggleLikeRecipe: ToggleLikeRecipe(
+              recipeRepository,
+            ), // <-- Của đồng đội
+            searchRecipes: SearchRecipes(recipeRepository), // <-- Của bạn
           )..add(LoadAllRecipes()),
         ),
       ],

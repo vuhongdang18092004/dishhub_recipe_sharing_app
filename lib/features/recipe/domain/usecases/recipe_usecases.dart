@@ -41,7 +41,6 @@ class ToggleLikeRecipe {
 }
 // *** HẾT PHẦN CỦA ĐỒNG ĐỘI ***
 
-
 // *** PHẦN CỦA BẠN (THÊM VÀO) ***
 class SearchRecipes {
   final RecipeRepository repository;

@@ -36,7 +36,6 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     required this.toggleLikeRecipe, // <-- PHẦN CỦA ĐỒNG ĐỘI
     required this.searchRecipes, // <-- PHẦN CỦA BẠN
   }) : super(RecipeInitial()) {
-    
     // Handler tải tất cả (Đã gộp)
     on<LoadAllRecipes>((event, emit) async {
       emit(RecipeLoading());
