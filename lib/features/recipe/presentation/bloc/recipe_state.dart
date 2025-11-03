@@ -6,16 +6,41 @@ abstract class RecipeState extends Equatable {
 }
 
 class RecipeInitial extends RecipeState {}
+
+// Các state này dùng cho việc TẢI TẤT CẢ công thức
 class RecipeLoading extends RecipeState {}
+
 class RecipeLoaded extends RecipeState {
   final List<RecipeEntity> recipes;
   RecipeLoaded(this.recipes);
   @override
   List<Object?> get props => [recipes];
 }
+
 class RecipeError extends RecipeState {
   final String message;
   RecipeError(this.message);
   @override
   List<Object?> get props => [message];
 }
+
+// *** BẮT ĐẦU PHẦN MỚI: Các state cho TÌM KIẾM ***
+
+class RecipeSearchLoading extends RecipeState {}
+
+class RecipeSearchLoaded extends RecipeState {
+  final List<RecipeEntity> searchResults;
+  RecipeSearchLoaded(this.searchResults);
+
+  @override
+  List<Object?> get props => [searchResults];
+}
+
+class RecipeSearchError extends RecipeState {
+  final String message;
+  RecipeSearchError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+// *** KẾT THÚC PHẦN MỚI ***

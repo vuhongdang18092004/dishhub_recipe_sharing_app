@@ -25,6 +25,7 @@ class RecipeRepositoryImpl implements RecipeRepository {
     return RecipeModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
   }
 
+  // *** SỬ DỤNG PHIÊN BẢN CỦA BẠN (ĐẦY ĐỦ HƠN) ***
   @override
   Future<void> addRecipe(RecipeEntity recipe) async {
     final recipeModel = RecipeModel(
@@ -38,11 +39,14 @@ class RecipeRepositoryImpl implements RecipeRepository {
       steps: recipe.steps,
       likes: recipe.likes,
       savedBy: recipe.savedBy,
+      comments: recipe.comments,
+      tags: recipe.tags,
+      searchKeywords: recipe.searchKeywords, 
     );
-
     await recipesCollection.add(recipeModel.toMap());
   }
 
+  // *** SỬ DỤNG PHIÊN BẢN CỦA BẠN (ĐẦY ĐỦ HƠN) ***
   @override
   Future<void> updateRecipe(RecipeEntity recipe) async {
     final recipeModel = RecipeModel(
@@ -56,11 +60,14 @@ class RecipeRepositoryImpl implements RecipeRepository {
       steps: recipe.steps,
       likes: recipe.likes,
       savedBy: recipe.savedBy,
+      comments: recipe.comments,
+      tags: recipe.tags,
+      searchKeywords: recipe.searchKeywords,
     );
-
     await recipesCollection.doc(recipe.id).update(recipeModel.toMap());
   }
 
+  // *** PHẦN CỦA ĐỒNG ĐỘI (GIỮ LẠI) ***
   @override
   Future<void> toggleLike(String recipeId, String userId) async {
     final docRef = recipesCollection.doc(recipeId);
@@ -77,9 +84,27 @@ class RecipeRepositoryImpl implements RecipeRepository {
       await docRef.update({'likes': FieldValue.arrayUnion([userId])});
     }
   }
+  // *** HẾT PHẦN CỦA ĐỒNG ĐỘI ***
 
   @override
   Future<void> deleteRecipe(String id) async {
     await recipesCollection.doc(id).delete();
   }
+
+  // *** PHẦN CỦA BẠN (GIỮ LẠI) ***
+  @override
+  Future<List<RecipeEntity>> searchRecipes(String query) async {
+    // Chuyển sang chữ thường để tìm kiếm (từ phiên bản của bạn)
+    final snapshot = await recipesCollection
+        .where('searchKeywords', arrayContains: query.toLowerCase())
+        .get();
+
+    return snapshot.docs
+        .map(
+          (doc) =>
+              RecipeModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
+        )
+        .toList();
+  }
+  // *** HẾT PHẦN CỦA BẠN ***
 }

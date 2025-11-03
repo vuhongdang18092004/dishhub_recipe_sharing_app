@@ -63,6 +63,7 @@ void main() async {
   runApp(
     MultiBlocProvider(
       providers: [
+        // *** PHIÊN BẢN AUTHBLOC CỦA ĐỒNG ĐỘI (ĐẦY ĐỦ) ***
         BlocProvider<AuthBloc>(
           create: (_) => AuthBloc(
             signUpWithEmail: SignUpWithEmail(authRepository),
@@ -71,9 +72,11 @@ void main() async {
             resetPassword: ResetPassword(authRepository),
             signOut: SignOut(authRepository),
             getCurrentUser: GetCurrentUser(authRepository),
-            toggleSaveRecipe: ToggleSaveRecipe(authRepository),
+            toggleSaveRecipe: ToggleSaveRecipe(authRepository), // <-- Đã gộp
           )..add(const AuthCheckStatus()),
         ),
+
+        // *** PHIÊN BẢN RECIPEBLOC ĐÃ GỘP (CẢ 2 TÍNH NĂNG) ***
         BlocProvider<RecipeBloc>(
           create: (_) => RecipeBloc(
             getAllRecipes: GetAllRecipes(recipeRepository),
@@ -81,7 +84,8 @@ void main() async {
             addRecipe: AddRecipe(recipeRepository),
             updateRecipe: UpdateRecipe(recipeRepository),
             deleteRecipe: DeleteRecipe(recipeRepository),
-            toggleLikeRecipe: ToggleLikeRecipe(recipeRepository),
+            toggleLikeRecipe: ToggleLikeRecipe(recipeRepository), // <-- Của đồng đội
+            searchRecipes: SearchRecipes(recipeRepository),     // <-- Của bạn
           )..add(LoadAllRecipes()),
         ),
       ],
