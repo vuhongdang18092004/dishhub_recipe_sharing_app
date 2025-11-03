@@ -127,6 +127,53 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
 
     // Handler ToggleLike (PHẦN CỦA ĐỒNG ĐỘI - GIỮ NGUYÊN)
     on<ToggleLike>((event, emit) async {
+      final currentState = state;
+      // If we have the recipes loaded, do an optimistic update so UI updates immediately
+      if (currentState is RecipeLoaded) {
+        final updatedList = List<RecipeEntity>.from(currentState.recipes);
+        final index = updatedList.indexWhere((r) => r.id == event.recipeId);
+        if (index != -1) {
+          final recipe = updatedList[index];
+          final newLikes = List<String>.from(recipe.likes);
+          if (newLikes.contains(event.userId)) {
+            newLikes.remove(event.userId);
+          } else {
+            newLikes.add(event.userId);
+          }
+
+          final updatedRecipe = RecipeEntity(
+            id: recipe.id,
+            title: recipe.title,
+            description: recipe.description,
+            photoUrls: recipe.photoUrls,
+            videoUrl: recipe.videoUrl,
+            creatorId: recipe.creatorId,
+            ingredients: recipe.ingredients,
+            steps: recipe.steps,
+            likes: newLikes,
+            savedBy: recipe.savedBy,
+            comments: recipe.comments,
+            tags: recipe.tags,
+          );
+
+          updatedList[index] = updatedRecipe;
+          // Emit optimistic state
+          emit(RecipeLoaded(updatedList));
+
+          try {
+            await toggleLikeRecipe(event.recipeId, event.userId);
+            // Reconcile with authoritative data
+            add(LoadAllRecipes());
+          } catch (e) {
+            // Revert on error
+            emit(currentState);
+            emit(RecipeError(e.toString()));
+          }
+          return;
+        }
+      }
+
+      // Fallback: no optimistic update possible, call backend and refresh
       try {
         await toggleLikeRecipe(event.recipeId, event.userId);
         add(LoadAllRecipes());

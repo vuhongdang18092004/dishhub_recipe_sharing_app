@@ -6,23 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="859c065a-247e-484d-b6df-021175854e74" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/config/app_router.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/config/app_router.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/auth/data/datasources/firebase_auth_datasource.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/data/datasources/firebase_auth_datasource.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/auth/data/repositories/auth_repository_impl.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/data/repositories/auth_repository_impl.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/auth/domain/repositories/auth_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/domain/repositories/auth_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/auth/presentation/bloc/auth_bloc.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/presentation/bloc/auth_bloc.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/auth/presentation/bloc/auth_event.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/presentation/bloc/auth_event.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/auth/presentation/screens/saved_recipes_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/presentation/screens/saved_recipes_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/auth/presentation/screens/setting_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/presentation/screens/setting_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/recipe/data/repositories/recipe_repository_impl.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/recipe/data/repositories/recipe_repository_impl.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/recipe/domain/repositories/recipe_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/recipe/domain/repositories/recipe_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/recipe/domain/usecases/recipe_usecases.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/recipe/domain/usecases/recipe_usecases.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/recipe/presentation/bloc/recipe_bloc.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/recipe/presentation/bloc/recipe_bloc.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/recipe/presentation/bloc/recipe_event.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/recipe/presentation/bloc/recipe_event.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/recipe/presentation/screens/home_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/recipe/presentation/screens/home_page.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/recipe/presentation/screens/recipe_detail_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/recipe/presentation/screens/recipe_detail_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/recipe/presentation/widgets/recipe_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/recipe/presentation/widgets/recipe_card.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
