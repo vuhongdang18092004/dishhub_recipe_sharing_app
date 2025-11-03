@@ -32,10 +32,19 @@ class ResetPassword {
   final AuthRepository repository;
   ResetPassword(this.repository);
 
-  Future<void> call(String email) {
-    return repository.resetPassword(email);
+  Future<void> call(String email) async {
+    if (email.isEmpty) {
+      throw Exception("Vui lòng nhập địa chỉ email trước khi đặt lại mật khẩu.");
+    }
+
+    try {
+      await repository.resetPassword(email);
+    } catch (e) {
+      throw Exception("Không thể gửi email đặt lại mật khẩu. ${e.toString()}");
+    }
   }
 }
+
 
 class SignOut {
   final AuthRepository repository;
@@ -63,3 +72,13 @@ class ToggleSaveRecipe {
     return repository.toggleSaveRecipe(userId, recipeId);
   }
 }
+
+class SendEmailVerification {
+  final AuthRepository repository;
+  SendEmailVerification(this.repository);
+
+  Future<void> call() {
+    return repository.sendEmailVerification();
+  }
+}
+

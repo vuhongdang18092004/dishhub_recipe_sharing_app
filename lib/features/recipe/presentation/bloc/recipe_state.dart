@@ -7,7 +7,6 @@ abstract class RecipeState extends Equatable {
 
 class RecipeInitial extends RecipeState {}
 
-// Các state này dùng cho việc TẢI TẤT CẢ công thức
 class RecipeLoading extends RecipeState {}
 
 class RecipeLoaded extends RecipeState {
@@ -23,8 +22,6 @@ class RecipeError extends RecipeState {
   @override
   List<Object?> get props => [message];
 }
-
-// *** BẮT ĐẦU PHẦN MỚI: Các state cho TÌM KIẾM ***
 
 class RecipeSearchLoading extends RecipeState {}
 
@@ -43,4 +40,3 @@ class RecipeSearchError extends RecipeState {
   @override
   List<Object?> get props => [message];
 }
-// *** KẾT THÚC PHẦN MỚI ***

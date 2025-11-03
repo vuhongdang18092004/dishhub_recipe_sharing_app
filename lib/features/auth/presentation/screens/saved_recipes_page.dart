@@ -113,9 +113,6 @@ class _SavedRecipesPageState extends State<SavedRecipesPage> {
                         recipe: recipe,
                         currentUser: currentUser,
                         onTap: () {
-                          // Use `go` to navigate into the /home/recipe-detail route from
-                          // outside the home branch to avoid pageKey reservation conflicts
-                          // when pushing across shell branches.
                           GoRouter.of(context).push('/recipe-detail', extra: recipe);
                         },
                       );

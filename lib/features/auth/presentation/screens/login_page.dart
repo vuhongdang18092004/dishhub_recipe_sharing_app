@@ -16,44 +16,30 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   final String logoUrl =
       "https://global-web-assets.cpcdn.com/assets/logo_circle-d106f02123de882fffdd2c06593eb2fd33f0ddf20418dd75ed72225bdb0e0ff7.png";
 
   @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final themeColor = Colors.deepOrangeAccent;
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Đăng nhập"), elevation: 0),
+      backgroundColor: Colors.white,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated && state.user != null) {
-            final user = UserEntity(
-              id: state.user.id,
-              name: state.user.name,
-              email: state.user.email,
-              photo: state.user.photo,
-              role: state.user.role,
-              vip: state.user.vip,
-              recipes: state.user.recipes,
-              followers: state.user.followers,
-              following: state.user.following,
-              savedRecipes: state.user.savedRecipes,
-            );
-
+            final user = state.user;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text("Xin chào ${user.name}!")),
             );
             context.go("/home", extra: user);
-          }
-
-          if (state is AuthError) {
+          } else if (state is AuthPasswordReset) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
             );
@@ -65,69 +51,73 @@ class _LoginPageState extends State<LoginPage> {
           }
 
           return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(32.0),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 60),
+            child: Form(
+              key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 30.0, top: 10.0),
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.grey.shade200,
-                        child: CachedNetworkImage(
-                          imageUrl: logoUrl,
-                          imageBuilder: (context, imageProvider) => Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          placeholder: (context, url) =>
-                              const CircularProgressIndicator(),
-                          errorWidget: (context, url, error) =>
-                              const Icon(Icons.error),
-                        ),
-                      ),
+                  CachedNetworkImage(
+                    imageUrl: logoUrl,
+                    height: 100,
+                    placeholder: (_, __) => const CircularProgressIndicator(),
+                    errorWidget: (_, __, ___) =>
+                        const Icon(Icons.fastfood, size: 80),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    "DishHub",
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: themeColor,
                     ),
                   ),
-                  const Center(
-                    child: Text(
-                      "Chào mừng đến với DishHub",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blueAccent,
-                      ),
-                    ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "Khám phá và chia sẻ công thức nấu ăn dễ dàng!",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey[600]),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 40),
 
-                  TextField(
+                  // Email
+                  TextFormField(
                     controller: emailController,
                     keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Vui lòng nhập email";
+                      } else if (!value.contains('@')) {
+                        return "Email không hợp lệ";
+                      }
+                      return null;
+                    },
                     decoration: InputDecoration(
                       labelText: "Email",
                       prefixIcon: const Icon(Icons.email_outlined),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
 
-                  TextField(
+                  // Password
+                  TextFormField(
                     controller: passwordController,
                     obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Vui lòng nhập mật khẩu";
+                      }
+                      return null;
+                    },
                     decoration: InputDecoration(
                       labelText: "Mật khẩu",
                       prefixIcon: const Icon(Icons.lock_outline),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
@@ -137,34 +127,46 @@ class _LoginPageState extends State<LoginPage> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        context.read<AuthBloc>().add(
-                              AuthResetPassword(email: emailController.text),
-                            );
+                        if (emailController.text.isEmpty ||
+                            !emailController.text.contains("@")) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                    Text("Vui lòng nhập email hợp lệ trước")),
+                          );
+                        } else {
+                          context.read<AuthBloc>().add(
+                                AuthResetPassword(
+                                    email: emailController.text.trim()),
+                              );
+                        }
                       },
                       child: const Text(
                         "Quên mật khẩu?",
-                        style: TextStyle(color: Colors.blueAccent),
+                        style: TextStyle(color: Colors.deepOrangeAccent),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
 
+                  // Login button
                   ElevatedButton(
                     onPressed: () {
-                      context.read<AuthBloc>().add(
-                            AuthSignInEmail(
-                              email: emailController.text,
-                              password: passwordController.text,
-                            ),
-                          );
+                      if (_formKey.currentState!.validate()) {
+                        context.read<AuthBloc>().add(
+                              AuthSignInEmail(
+                                email: emailController.text.trim(),
+                                password: passwordController.text.trim(),
+                              ),
+                            );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      backgroundColor: themeColor,
+                      minimumSize: const Size(double.infinity, 55),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      backgroundColor: Colors.blueAccent,
-                      foregroundColor: Colors.white,
                     ),
                     child: const Text(
                       "ĐĂNG NHẬP",
@@ -172,47 +174,39 @@ class _LoginPageState extends State<LoginPage> {
                           TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 25),
 
-                  const Row(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Expanded(child: Divider()),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Text("HOẶC"),
+                      const Text("Chưa có tài khoản? "),
+                      GestureDetector(
+                        onTap: () => context.push("/signup"),
+                        child: Text(
+                          "Đăng ký ngay",
+                          style: TextStyle(
+                            color: themeColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                      Expanded(child: Divider()),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 25),
 
-                  ElevatedButton(
+                  // Google login
+                  OutlinedButton.icon(
                     onPressed: () {
                       context.read<AuthBloc>().add(AuthSignInGoogle());
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black87,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
+                    icon: Image.asset('assets/google_icon.png', height: 24),
+                    label: const Text("Đăng nhập với Google"),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 55),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      side: const BorderSide(color: Colors.grey, width: 0.5),
-                      elevation: 2,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Đăng nhập với",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Image.asset('assets/google_icon.png', height: 24),
-                      ],
+                      side: BorderSide(color: Colors.grey.shade400),
                     ),
                   ),
                 ],
