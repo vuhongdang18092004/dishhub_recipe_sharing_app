@@ -6,6 +6,7 @@ import '../features/recipe/presentation/screens/add_recipe_page.dart';
 import '../features/auth/presentation/screens/setting_page.dart';
 import '../features/auth/presentation/screens/login_page.dart';
 import '../features/auth/presentation/screens/account_info_page.dart';
+import '../features/auth/presentation/screens/saved_recipes_page.dart';
 import '../features/auth/domain/entities/user_entity.dart';
 import '../features/recipe/presentation/screens/recipe_detail_page.dart';
 import '../features/recipe/domain/entities/recipe_entity.dart';
@@ -34,7 +35,11 @@ class AppRouter {
               GoRoute(
                 path: '/home',
                 pageBuilder: (context, state) {
-                  final user = state.extra as UserEntity? ?? initialUser;
+                  // state.extra may contain different types depending on where
+                  // navigation originated (e.g. a RecipeEntity when navigating
+                  // to a nested recipe-detail). Avoid direct `as` casts which
+                  // can throw if the extra is not a UserEntity.
+                  final user = state.extra is UserEntity ? state.extra as UserEntity : initialUser;
                   if (user == null) return const NoTransitionPage(child: LoginPage());
                   return NoTransitionPage(child: HomePage(user: user));
                 },
@@ -43,12 +48,12 @@ class AppRouter {
                   GoRoute(
                     path: 'recipe-detail', 
                     pageBuilder: (context, state) {
-                      final recipe = state.extra as RecipeEntity;
-                      return MaterialPage(
-                        key: state.pageKey,
-                        child: RecipeDetailPage(recipe: recipe),
-                      );
-                    },
+                          final recipe = state.extra as RecipeEntity;
+                          return MaterialPage(
+                            key: state.pageKey,
+                            child: RecipeDetailPage(recipe: recipe),
+                          );
+                        },
                   ),
                 ],
               ),
@@ -59,8 +64,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/add',
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: AddRecipePage()),
+        pageBuilder: (context, state) =>
+          const NoTransitionPage(child: AddRecipePage()),
                 routes: [
                   GoRoute(
                     path: 'recipe-detail',
@@ -92,12 +97,35 @@ class AppRouter {
       GoRoute(
         path: '/settings/account-info',
         pageBuilder: (context, state) {
-          final user = state.extra as UserEntity? ?? initialUser;
+          final user = state.extra is UserEntity ? state.extra as UserEntity : initialUser;
           if (user == null) return const MaterialPage(child: LoginPage());
 
           return CustomTransitionPage(
             key: state.pageKey,
             child: AccountInfoPage(user: user),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              return SlideTransition(
+                position: Tween(
+                  begin: const Offset(1, 0),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              );
+            },
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/saved-recipes',
+        pageBuilder: (context, state) {
+          final user = state.extra is UserEntity ? state.extra as UserEntity : initialUser;
+          if (user == null) return const MaterialPage(child: LoginPage());
+
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: SavedRecipesPage(user: user),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               return SlideTransition(

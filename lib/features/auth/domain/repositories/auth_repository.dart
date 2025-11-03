@@ -7,4 +7,5 @@ abstract class AuthRepository {
   Future<void> resetPassword(String email);
   Future<void> signOut();
   Future<UserEntity?> getCurrentUser();
+  Future<UserEntity> toggleSaveRecipe(String userId, String recipeId);
 }

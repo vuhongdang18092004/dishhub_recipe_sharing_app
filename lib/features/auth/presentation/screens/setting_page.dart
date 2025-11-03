@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../domain/entities/user_entity.dart';
 import '../bloc/auth_bloc.dart';
 
 class SettingPage extends StatelessWidget {
@@ -38,7 +37,7 @@ class SettingPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      user.name ?? "Người dùng",
+                      user.name,
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -46,7 +45,7 @@ class SettingPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      user.email ?? "Không có email",
+                      user.email,
                       style: const TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                   ],

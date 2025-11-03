@@ -14,6 +14,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final ResetPassword resetPassword;
   final SignOut signOut;
   final GetCurrentUser getCurrentUser;
+  final ToggleSaveRecipe toggleSaveRecipe;
 
   AuthBloc({
     required this.signUpWithEmail,
@@ -22,7 +23,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.resetPassword,
     required this.signOut,
     required this.getCurrentUser,
+    required this.toggleSaveRecipe,
   }) : super(AuthInitial()) {
+    // Track recipe IDs currently being toggled to prevent concurrent toggles
+    final Set<String> _processingToggles = <String>{};
     on<AuthSignUp>((event, emit) async {
       emit(AuthLoading());
       try {
@@ -87,6 +91,44 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           photo: event.newAvatarUrl,
         );
         emit(AuthAuthenticated(updatedUser));
+      }
+    });
+
+    on<AuthToggleSaveRecipe>((event, emit) async {
+      final currentState = state;
+      if (currentState is! AuthAuthenticated) return;
+
+      // prevent concurrent toggles for the same recipe
+      if (_processingToggles.contains(event.recipeId)) return;
+      _processingToggles.add(event.recipeId);
+
+      // Optimistic update: toggle locally first so UI responds immediately
+      final currentSaved = List<String>.from(currentState.user.savedRecipes);
+      final optimisticList = List<String>.from(currentSaved);
+      if (optimisticList.contains(event.recipeId)) {
+        optimisticList.remove(event.recipeId);
+      } else {
+        optimisticList.add(event.recipeId);
+      }
+
+      final optimisticUser = currentState.user.copyWith(savedRecipes: optimisticList);
+      print('AuthBloc: optimistic savedRecipes -> ${optimisticUser.savedRecipes}');
+      emit(AuthAuthenticated(optimisticUser));
+
+      try {
+        final updatedUser = await toggleSaveRecipe(
+          currentState.user.id,
+          event.recipeId,
+        );
+        // Replace optimistic user with authoritative user from backend
+        print('AuthBloc: backend updated savedRecipes -> ${updatedUser.savedRecipes}');
+        emit(AuthAuthenticated(updatedUser));
+      } catch (e) {
+        // Revert to previous state on error
+        print('Error toggling save recipe: $e');
+        emit(currentState);
+      } finally {
+        _processingToggles.remove(event.recipeId);
       }
     });
   }

@@ -6,9 +6,21 @@
   <component name="ChangeListManager">
     <list default="true" id="859c065a-247e-484d-b6df-021175854e74" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/dishhub_recipe_sharing_app_android.iml" beforeDir="false" afterPath="$PROJECT_DIR$/android/dishhub_recipe_sharing_app_android.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/config/app_router.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/config/app_router.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/auth/data/datasources/firebase_auth_datasource.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/data/datasources/firebase_auth_datasource.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/auth/data/repositories/auth_repository_impl.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/data/repositories/auth_repository_impl.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/auth/domain/repositories/auth_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/domain/repositories/auth_repository.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/auth/domain/usecases/auth_usecases.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/domain/usecases/auth_usecases.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/auth/presentation/bloc/auth_bloc.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/presentation/bloc/auth_bloc.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/auth/presentation/bloc/auth_event.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/presentation/bloc/auth_event.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/auth/presentation/bloc/auth_state.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/presentation/bloc/auth_state.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/auth/presentation/screens/setting_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/presentation/screens/setting_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/recipe/presentation/screens/home_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/recipe/presentation/screens/home_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/recipe/presentation/widgets/recipe_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/recipe/presentation/widgets/recipe_card.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,24 +62,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Flutter.main.dart.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "main",
-    "io.flutter.reload.alreadyRun": "true",
-    "last_opened_file_path": "C:/Users/Lenovo/Downloads/dishhub_recipe_sharing_app",
-    "settings.editor.selected.configurable": "dart.settings",
-    "show.migrate.to.gradle.popup": "false"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Flutter.main.dart.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;io.flutter.reload.alreadyRun&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Lenovo/Downloads/dishhub_recipe_sharing_app&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;dart.settings&quot;,
+    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
   }
-}]]></component>
+}</component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="859c065a-247e-484d-b6df-021175854e74" name="Changes" comment="" />

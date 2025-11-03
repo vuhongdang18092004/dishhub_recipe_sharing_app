@@ -54,3 +54,12 @@ class GetCurrentUser {
     return repository.getCurrentUser();
   }
 }
+
+class ToggleSaveRecipe {
+  final AuthRepository repository;
+  ToggleSaveRecipe(this.repository);
+
+  Future<UserEntity> call(String userId, String recipeId) {
+    return repository.toggleSaveRecipe(userId, recipeId);
+  }
+}

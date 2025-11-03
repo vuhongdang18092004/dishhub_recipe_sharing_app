@@ -37,4 +37,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<UserEntity?> getCurrentUser() {
     return remoteDataSource.getCurrentUser();
   }
+
+  @override
+  Future<UserEntity> toggleSaveRecipe(String userId, String recipeId) {
+    return remoteDataSource.toggleSaveRecipe(userId, recipeId);
+  }
 }

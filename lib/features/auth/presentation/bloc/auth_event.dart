@@ -59,9 +59,18 @@ class AuthCheckStatus extends AuthEvent {
 class AuthUpdateAvatar extends AuthEvent {
   final String newAvatarUrl;
 
-  const AuthUpdateAvatar(this.newAvatarUrl);
+  const AuthUpdateAvatar({required this.newAvatarUrl});
 
   @override
   List<Object?> get props => [newAvatarUrl];
+}
+
+class AuthToggleSaveRecipe extends AuthEvent {
+  final String recipeId;
+
+  const AuthToggleSaveRecipe({required this.recipeId});
+
+  @override
+  List<Object?> get props => [recipeId];
 }
 

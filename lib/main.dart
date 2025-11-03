@@ -4,7 +4,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'config/theme.dart';
@@ -28,7 +27,8 @@ void main() async {
   final firebaseAuth = FirebaseAuth.instance;
   final firestore = FirebaseFirestore.instance;
   final googleSignIn = GoogleSignIn();
-  
+
+  // Auth repository
   final authRemoteDataSource = AuthRemoteDataSourceImpl(
     firebaseAuth,
     firestore,
@@ -36,8 +36,10 @@ void main() async {
   );
   final authRepository = AuthRepositoryImpl(authRemoteDataSource);
 
+  // Recipe repository
   final recipeRepository = RecipeRepositoryImpl(firestore);
 
+  // Kiểm tra user hiện tại
   UserEntity? initialUser;
   final currentUser = firebaseAuth.currentUser;
   if (currentUser != null) {
@@ -69,6 +71,7 @@ void main() async {
             resetPassword: ResetPassword(authRepository),
             signOut: SignOut(authRepository),
             getCurrentUser: GetCurrentUser(authRepository),
+            toggleSaveRecipe: ToggleSaveRecipe(authRepository),
           )..add(const AuthCheckStatus()),
         ),
         BlocProvider<RecipeBloc>(

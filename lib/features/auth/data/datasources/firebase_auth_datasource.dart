@@ -11,6 +11,7 @@ abstract class AuthRemoteDataSource {
   Future<void> resetPassword(String email);
   Future<void> signOut();
   Future<UserModel?> getCurrentUser();
+  Future<UserModel> toggleSaveRecipe(String userId, String recipeId);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -93,5 +94,62 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     if (!doc.exists) return null;
 
     return UserModel.fromMap(doc.data()!, user.uid);
+  }
+
+  @override
+  Future<UserModel> toggleSaveRecipe(String userId, String recipeId) async {
+    final userDoc = _firestore.collection('users').doc(userId);
+    final docSnapshot = await userDoc.get();
+    
+    if (!docSnapshot.exists) {
+      throw Exception('User not found');
+    }
+
+    final userData = docSnapshot.data()!;
+    final savedRecipes = List<String>.from(userData['savedRecipes'] ?? []);
+
+    print('Before toggle - savedRecipes: $savedRecipes');
+    print('Recipe ID to toggle: $recipeId');
+    print('Contains recipe: ${savedRecipes.contains(recipeId)}');
+
+    if (savedRecipes.contains(recipeId)) {
+      // Remove recipe from saved list
+      savedRecipes.remove(recipeId);
+      print('Removed recipe - new list: $savedRecipes');
+    } else {
+      // Add recipe to saved list
+      savedRecipes.add(recipeId);
+      print('Added recipe - new list: $savedRecipes');
+    }
+
+    // Update user's savedRecipes
+    await userDoc.update({'savedRecipes': savedRecipes});
+
+    // Also update the recipe document's savedBy for consistency
+    try {
+      final recipeDocRef = _firestore.collection('recipes').doc(recipeId);
+      final recipeSnapshot = await recipeDocRef.get();
+      if (recipeSnapshot.exists) {
+        final recipeData = recipeSnapshot.data()! as Map<String, dynamic>;
+        final savedBy = List<String>.from(recipeData['savedBy'] ?? []);
+
+        if (savedBy.contains(userId)) {
+          savedBy.remove(userId);
+        } else {
+          savedBy.add(userId);
+        }
+
+        await recipeDocRef.update({'savedBy': savedBy});
+      }
+    } catch (e) {
+      // Non-fatal: log and continue
+      print('Failed to update recipe.savedBy: $e');
+    }
+
+    final updatedDoc = await userDoc.get();
+    final updatedUser = UserModel.fromMap(updatedDoc.data()!, userId);
+    print('Updated user savedRecipes: ${updatedUser.savedRecipes}');
+
+    return updatedUser;
   }
 }
