@@ -24,14 +24,15 @@ class RecipeDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
       appBar: AppBar(
         elevation: 0,
         title: const Text("Chi tiết công thức"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
+        foregroundColor: isDarkMode ? Colors.white : Colors.black,
         actions: [
           // Like action
           BlocBuilder<AuthBloc, AuthState>(builder: (context, authState) {
@@ -43,7 +44,7 @@ class RecipeDetailPage extends StatelessWidget {
                 IconButton(
                   icon: Icon(
                     isLiked ? Icons.thumb_up : Icons.thumb_up_off_alt,
-                    color: isLiked ? Colors.blue : Colors.grey[700],
+                    color: isLiked ? Colors.blue : theme.iconTheme.color,
                   ),
                   onPressed: user != null
                       ? () {
@@ -56,13 +57,17 @@ class RecipeDetailPage extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(right: 8.0),
-                  child: Text('${recipe.likes.length}'),
+                  child: Text(
+                    '${recipe.likes.length}',
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black87,
+                    ),
+                  ),
                 ),
               ],
             );
           }),
-          // Bookmark action: uses AuthBloc to toggle saved status and
-          // reflects current user's savedRecipes.
+          // Bookmark action
           BlocBuilder<AuthBloc, AuthState>(builder: (context, authState) {
             final user = authState is AuthAuthenticated ? authState.user : null;
             final isSaved = user?.savedRecipes.contains(recipe.id) ?? false;
@@ -70,7 +75,7 @@ class RecipeDetailPage extends StatelessWidget {
             return IconButton(
               icon: Icon(
                 isSaved ? Icons.bookmark : Icons.bookmark_border,
-                color: isSaved ? Colors.orange : Colors.grey[700],
+                color: isSaved ? Colors.orange : theme.iconTheme.color,
               ),
               onPressed: user != null
                   ? () {
@@ -119,14 +124,14 @@ class RecipeDetailPage extends StatelessWidget {
                     recipe.title,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: isDarkMode ? Colors.white : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     recipe.description,
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[700],
+                      color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
                       height: 1.4,
                     ),
                   ),
@@ -140,13 +145,16 @@ class RecipeDetailPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  const Icon(Icons.restaurant_menu, color: Colors.deepOrange),
+                  Icon(
+                    Icons.restaurant_menu, 
+                    color: theme.primaryColor,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Nguyên liệu',
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: isDarkMode ? Colors.white : Colors.black87,
                     ),
                   ),
                 ],
@@ -156,7 +164,7 @@ class RecipeDetailPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Card(
-                color: Colors.white,
+                color: isDarkMode ? Colors.grey[800] : Colors.white,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -174,17 +182,19 @@ class RecipeDetailPage extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.circle,
                               size: 6,
-                              color: Colors.orangeAccent,
+                              color: theme.primaryColor,
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 ing,
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.black87,
+                                  color: isDarkMode 
+                                      ? Colors.grey[300] 
+                                      : Colors.black87,
                                   height: 1.3,
                                 ),
                               ),
@@ -204,16 +214,16 @@ class RecipeDetailPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.format_list_numbered_rounded,
-                    color: Colors.deepOrange,
+                    color: theme.primaryColor,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     'Các bước thực hiện',
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: isDarkMode ? Colors.white : Colors.black87,
                     ),
                   ),
                 ],
@@ -231,7 +241,7 @@ class RecipeDetailPage extends StatelessWidget {
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 10),
                     elevation: 2,
-                    color: Colors.white,
+                    color: isDarkMode ? Colors.grey[800] : Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
@@ -244,13 +254,11 @@ class RecipeDetailPage extends StatelessWidget {
                             children: [
                               CircleAvatar(
                                 radius: 16,
-                                backgroundColor: Colors.deepOrange.withOpacity(
-                                  0.15,
-                                ),
+                                backgroundColor: theme.primaryColor.withOpacity(0.15),
                                 child: Text(
                                   '${i + 1}',
-                                  style: const TextStyle(
-                                    color: Colors.deepOrange,
+                                  style: TextStyle(
+                                    color: theme.primaryColor,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -261,6 +269,7 @@ class RecipeDetailPage extends StatelessWidget {
                                   'Bước ${i + 1}',
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
+                                    color: isDarkMode ? Colors.white : Colors.black87,
                                   ),
                                 ),
                               ),
@@ -270,12 +279,11 @@ class RecipeDetailPage extends StatelessWidget {
                           Text(
                             step.description,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.black87,
+                              color: isDarkMode ? Colors.grey[300] : Colors.black87,
                               height: 1.4,
                             ),
                           ),
-                          if (step.photoUrl != null &&
-                              step.photoUrl!.isNotEmpty)
+                          if (step.photoUrl != null && step.photoUrl!.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 12),
                               child: GestureDetector(

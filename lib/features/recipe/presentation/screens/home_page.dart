@@ -40,9 +40,7 @@ class HomePage extends StatelessWidget {
                       recipe: recipe,
                       currentUser: currentUser,
                       onTap: () {
-                        GoRouter.of(
-                          context,
-                        ).push('/home/recipe-detail', extra: recipe);
+                        GoRouter.of(context).push('/recipe-detail', extra: recipe);
                       },
                     );
                   },
