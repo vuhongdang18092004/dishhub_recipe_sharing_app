@@ -30,3 +30,10 @@ class DeleteRecipe {
   DeleteRecipe(this.repository);
   Future<void> call(String id) => repository.deleteRecipe(id);
 }
+
+class ToggleLikeRecipe {
+  final RecipeRepository repository;
+  ToggleLikeRecipe(this.repository);
+
+  Future<void> call(String recipeId, String userId) => repository.toggleLike(recipeId, userId);
+}

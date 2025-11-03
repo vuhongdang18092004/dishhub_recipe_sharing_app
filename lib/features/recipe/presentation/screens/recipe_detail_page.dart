@@ -1,5 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../bloc/recipe_bloc.dart';
 import '../../domain/entities/recipe_entity.dart';
 import '../../data/models/recipe_step.dart';
 import '../widgets/zoomable_image_screen.dart';
@@ -29,6 +32,57 @@ class RecipeDetailPage extends StatelessWidget {
         title: const Text("Chi tiết công thức"),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
+        actions: [
+          // Like action
+          BlocBuilder<AuthBloc, AuthState>(builder: (context, authState) {
+            final user = authState is AuthAuthenticated ? authState.user : null;
+            final isLiked = user != null ? recipe.likes.contains(user.id) : false;
+
+            return Row(
+              children: [
+                IconButton(
+                  icon: Icon(
+                    isLiked ? Icons.thumb_up : Icons.thumb_up_off_alt,
+                    color: isLiked ? Colors.blue : Colors.grey[700],
+                  ),
+                  onPressed: user != null
+                      ? () {
+                          context.read<RecipeBloc>().add(
+                                ToggleLike(recipeId: recipe.id, userId: user.id),
+                              );
+                        }
+                      : null,
+                  tooltip: 'Like',
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Text('${recipe.likes.length}'),
+                ),
+              ],
+            );
+          }),
+          // Bookmark action: uses AuthBloc to toggle saved status and
+          // reflects current user's savedRecipes.
+          BlocBuilder<AuthBloc, AuthState>(builder: (context, authState) {
+            final user = authState is AuthAuthenticated ? authState.user : null;
+            final isSaved = user?.savedRecipes.contains(recipe.id) ?? false;
+
+            return IconButton(
+              icon: Icon(
+                isSaved ? Icons.bookmark : Icons.bookmark_border,
+                color: isSaved ? Colors.orange : Colors.grey[700],
+              ),
+              onPressed: user != null
+                  ? () {
+                      context.read<AuthBloc>().add(
+                            AuthToggleSaveRecipe(recipeId: recipe.id),
+                          );
+                    }
+                  : null,
+              tooltip: isSaved ? 'Bỏ lưu' : 'Lưu công thức',
+            );
+          }),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

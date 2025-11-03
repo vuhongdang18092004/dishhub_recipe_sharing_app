@@ -111,8 +111,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         optimisticList.add(event.recipeId);
       }
 
-      final optimisticUser = currentState.user.copyWith(savedRecipes: optimisticList);
-      print('AuthBloc: optimistic savedRecipes -> ${optimisticUser.savedRecipes}');
+      final optimisticUser = currentState.user.copyWith(
+        savedRecipes: optimisticList,
+      );
+      print(
+        'AuthBloc: optimistic savedRecipes -> ${optimisticUser.savedRecipes}',
+      );
       emit(AuthAuthenticated(optimisticUser));
 
       try {
@@ -121,7 +125,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           event.recipeId,
         );
         // Replace optimistic user with authoritative user from backend
-        print('AuthBloc: backend updated savedRecipes -> ${updatedUser.savedRecipes}');
+        print(
+          'AuthBloc: backend updated savedRecipes -> ${updatedUser.savedRecipes}',
+        );
         emit(AuthAuthenticated(updatedUser));
       } catch (e) {
         // Revert to previous state on error

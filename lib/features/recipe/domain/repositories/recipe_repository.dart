@@ -10,4 +10,6 @@ abstract class RecipeRepository {
   Future<void> updateRecipe(RecipeEntity recipe);
 
   Future<void> deleteRecipe(String id);
+  
+  Future<void> toggleLike(String recipeId, String userId);
 }

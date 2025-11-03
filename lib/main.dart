@@ -81,6 +81,7 @@ void main() async {
             addRecipe: AddRecipe(recipeRepository),
             updateRecipe: UpdateRecipe(recipeRepository),
             deleteRecipe: DeleteRecipe(recipeRepository),
+            toggleLikeRecipe: ToggleLikeRecipe(recipeRepository),
           )..add(LoadAllRecipes()),
         ),
       ],
@@ -92,8 +93,9 @@ void main() async {
 class MyApp extends StatelessWidget {
   final UserEntity? initialUser;
 
-  static final ValueNotifier<ThemeMode> themeNotifier =
-      ValueNotifier(ThemeMode.light);
+  static final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(
+    ThemeMode.light,
+  );
 
   const MyApp({super.key, this.initialUser});
 

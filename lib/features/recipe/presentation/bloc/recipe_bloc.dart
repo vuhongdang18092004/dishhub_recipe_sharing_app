@@ -12,6 +12,7 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
   final AddRecipe addRecipe;
   final UpdateRecipe updateRecipe;
   final DeleteRecipe deleteRecipe;
+  final ToggleLikeRecipe toggleLikeRecipe;
 
   RecipeBloc({
     required this.getAllRecipes,
@@ -19,6 +20,7 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     required this.addRecipe,
     required this.updateRecipe,
     required this.deleteRecipe,
+    required this.toggleLikeRecipe,
   }) : super(RecipeInitial()) {
     on<LoadAllRecipes>((event, emit) async {
       emit(RecipeLoading());
@@ -51,6 +53,16 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     on<DeleteRecipeById>((event, emit) async {
       try {
         await deleteRecipe(event.id);
+        add(LoadAllRecipes());
+      } catch (e) {
+        emit(RecipeError(e.toString()));
+      }
+    });
+
+    on<ToggleLike>((event, emit) async {
+      try {
+        await toggleLikeRecipe(event.recipeId, event.userId);
+        // Refresh list so counts update for all listeners
         add(LoadAllRecipes());
       } catch (e) {
         emit(RecipeError(e.toString()));

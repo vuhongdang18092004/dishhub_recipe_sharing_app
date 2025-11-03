@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/recipe_entity.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../bloc/recipe_bloc.dart';
 
 class RecipeCard extends StatelessWidget {
   final RecipeEntity recipe;
@@ -20,7 +21,9 @@ class RecipeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
-        final user = authState is AuthAuthenticated ? authState.user : currentUser;
+        final user = authState is AuthAuthenticated
+            ? authState.user
+            : currentUser;
         final isSaved = user?.savedRecipes.contains(recipe.id) ?? false;
 
         return Card(
@@ -36,7 +39,9 @@ class RecipeCard extends StatelessWidget {
               children: [
                 if (recipe.photoUrls.isNotEmpty)
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
                     child: Image.network(
                       recipe.photoUrls.first,
                       height: 180,
@@ -72,20 +77,45 @@ class RecipeCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          const Icon(Icons.thumb_up_alt_outlined, size: 20, color: Colors.grey),
-                          const SizedBox(width: 4),
-                          Text('${recipe.likes.length}'),
-                          const SizedBox(width: 16),
+                          // Like button and count
+                          InkWell(
+                            onTap: user != null
+                                ? () {
+                                    print('RecipeCard: like tapped for ${recipe.id}');
+                                    // dispatch to RecipeBloc
+                                    context.read<RecipeBloc>().add(
+                                          ToggleLike(recipeId: recipe.id, userId: user.id),
+                                        );
+                                  }
+                                : null,
+                            borderRadius: BorderRadius.circular(20),
+                            child: Padding(
+                              padding: const EdgeInsets.all(6.0),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    recipe.likes.contains(user?.id) ? Icons.thumb_up : Icons.thumb_up_off_alt,
+                                    size: 20,
+                                    color: recipe.likes.contains(user?.id) ? Colors.blue : Colors.grey,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text('${recipe.likes.length}'),
+                                ],
+                              ),
+                            ),
+                          ),
                           InkWell(
                             onTap: user != null
                                 ? () {
                                     // Quick debug to ensure tap reaches this widget
                                     // and the event is dispatched.
                                     // TODO: remove debug print after verifying behavior.
-                                    print('RecipeCard: bookmark tapped for recipe ${recipe.id}');
+                                    print(
+                                      'RecipeCard: bookmark tapped for recipe ${recipe.id}',
+                                    );
                                     context.read<AuthBloc>().add(
-                                          AuthToggleSaveRecipe(recipeId: recipe.id),
-                                        );
+                                      AuthToggleSaveRecipe(recipeId: recipe.id),
+                                    );
                                   }
                                 : null,
                             borderRadius: BorderRadius.circular(20),
@@ -93,7 +123,9 @@ class RecipeCard extends StatelessWidget {
                               // Increase tappable area slightly to make the icon easier to hit.
                               padding: const EdgeInsets.all(8.0),
                               child: Icon(
-                                isSaved ? Icons.bookmark : Icons.bookmark_border,
+                                isSaved
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_border,
                                 size: 20,
                                 color: isSaved ? Colors.orange : Colors.grey,
                               ),

@@ -18,7 +18,9 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       body: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, authState) {
-          final currentUser = authState is AuthAuthenticated ? authState.user : user;
+          final currentUser = authState is AuthAuthenticated
+              ? authState.user
+              : user;
 
           return BlocBuilder<RecipeBloc, RecipeState>(
             builder: (context, state) {
@@ -38,7 +40,9 @@ class HomePage extends StatelessWidget {
                       recipe: recipe,
                       currentUser: currentUser,
                       onTap: () {
-                        GoRouter.of(context).push('/home/recipe-detail', extra: recipe);
+                        GoRouter.of(
+                          context,
+                        ).push('/home/recipe-detail', extra: recipe);
                       },
                     );
                   },

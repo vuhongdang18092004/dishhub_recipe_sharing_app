@@ -26,10 +26,7 @@ class AuthSignInEmail extends AuthEvent {
   final String email;
   final String password;
 
-  const AuthSignInEmail({
-    required this.email,
-    required this.password,
-  });
+  const AuthSignInEmail({required this.email, required this.password});
 
   @override
   List<Object?> get props => [email, password];
@@ -73,4 +70,3 @@ class AuthToggleSaveRecipe extends AuthEvent {
   @override
   List<Object?> get props => [recipeId];
 }
-

@@ -9,7 +9,11 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<UserEntity> signUpWithEmail(String email, String password, String name) {
+  Future<UserEntity> signUpWithEmail(
+    String email,
+    String password,
+    String name,
+  ) {
     return remoteDataSource.signUpWithEmail(email, password, name);
   }
 

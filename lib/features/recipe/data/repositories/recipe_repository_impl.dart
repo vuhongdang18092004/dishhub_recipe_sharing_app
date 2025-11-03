@@ -8,16 +8,13 @@ class RecipeRepositoryImpl implements RecipeRepository {
   final CollectionReference recipesCollection;
 
   RecipeRepositoryImpl(this.firestore)
-    : recipesCollection = firestore.collection('recipes');
+      : recipesCollection = firestore.collection('recipes');
 
   @override
   Future<List<RecipeEntity>> getAllRecipes() async {
     final snapshot = await recipesCollection.get();
     return snapshot.docs
-        .map(
-          (doc) =>
-              RecipeModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
-        )
+        .map((doc) => RecipeModel.fromMap(doc.data() as Map<String, dynamic>, doc.id))
         .toList();
   }
 
@@ -41,15 +38,9 @@ class RecipeRepositoryImpl implements RecipeRepository {
       steps: recipe.steps,
       likes: recipe.likes,
       savedBy: recipe.savedBy,
-      comments: recipe.comments,
-      tags: recipe.tags,
     );
 
-    // Nếu bạn muốn Firestore tự sinh ID:
     await recipesCollection.add(recipeModel.toMap());
-
-    // Nếu bạn muốn tự quản lý ID theo entity:
-    // await recipesCollection.doc(recipe.id).set(recipeModel.toMap());
   }
 
   @override
@@ -65,11 +56,26 @@ class RecipeRepositoryImpl implements RecipeRepository {
       steps: recipe.steps,
       likes: recipe.likes,
       savedBy: recipe.savedBy,
-      comments: recipe.comments,
-      tags: recipe.tags,
     );
 
     await recipesCollection.doc(recipe.id).update(recipeModel.toMap());
+  }
+
+  @override
+  Future<void> toggleLike(String recipeId, String userId) async {
+    final docRef = recipesCollection.doc(recipeId);
+    final snapshot = await docRef.get();
+    if (!snapshot.exists) return;
+
+    final data = snapshot.data() as Map<String, dynamic>;
+    final likes = List<String>.from(data['likes'] ?? []);
+
+    // If user already liked, remove; otherwise add. Use atomic updates to avoid races.
+    if (likes.contains(userId)) {
+      await docRef.update({'likes': FieldValue.arrayRemove([userId])});
+    } else {
+      await docRef.update({'likes': FieldValue.arrayUnion([userId])});
+    }
   }
 
   @override

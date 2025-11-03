@@ -22,15 +22,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl(this._auth, this._firestore, this._googleSignIn);
 
   @override
-  Future<UserModel> signUpWithEmail(String email, String password, String name) async {
-    final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+  Future<UserModel> signUpWithEmail(
+    String email,
+    String password,
+    String name,
+  ) async {
+    final cred = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
     final userId = cred.user!.uid;
 
-    final user = UserModel(
-      id: userId,
-      name: name,
-      email: email,
-    );
+    final user = UserModel(id: userId, name: name, email: email);
 
     await _firestore.collection('users').doc(userId).set(user.toMap());
 
@@ -39,8 +42,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel> signInWithEmail(String email, String password) async {
-    final cred = await _auth.signInWithEmailAndPassword(email: email, password: password);
-    final userDoc = await _firestore.collection('users').doc(cred.user!.uid).get();
+    final cred = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    final userDoc = await _firestore
+        .collection('users')
+        .doc(cred.user!.uid)
+        .get();
 
     return UserModel.fromMap(userDoc.data()!, cred.user!.uid);
   }
@@ -100,7 +109,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<UserModel> toggleSaveRecipe(String userId, String recipeId) async {
     final userDoc = _firestore.collection('users').doc(userId);
     final docSnapshot = await userDoc.get();
-    
+
     if (!docSnapshot.exists) {
       throw Exception('User not found');
     }
@@ -113,37 +122,31 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     print('Contains recipe: ${savedRecipes.contains(recipeId)}');
 
     if (savedRecipes.contains(recipeId)) {
-      // Remove recipe from saved list
-      savedRecipes.remove(recipeId);
-      print('Removed recipe - new list: $savedRecipes');
-    } else {
-      // Add recipe to saved list
-      savedRecipes.add(recipeId);
-      print('Added recipe - new list: $savedRecipes');
-    }
+      // Remove recipe from saved list (use atomic arrayRemove to avoid races)
+      print('Removing recipe $recipeId from user $userId savedRecipes');
+      await userDoc.update({'savedRecipes': FieldValue.arrayRemove([recipeId])});
 
-    // Update user's savedRecipes
-    await userDoc.update({'savedRecipes': savedRecipes});
-
-    // Also update the recipe document's savedBy for consistency
-    try {
-      final recipeDocRef = _firestore.collection('recipes').doc(recipeId);
-      final recipeSnapshot = await recipeDocRef.get();
-      if (recipeSnapshot.exists) {
-        final recipeData = recipeSnapshot.data()! as Map<String, dynamic>;
-        final savedBy = List<String>.from(recipeData['savedBy'] ?? []);
-
-        if (savedBy.contains(userId)) {
-          savedBy.remove(userId);
-        } else {
-          savedBy.add(userId);
-        }
-
-        await recipeDocRef.update({'savedBy': savedBy});
+      // Also remove userId from recipe.savedBy atomically
+      try {
+        final recipeDocRef = _firestore.collection('recipes').doc(recipeId);
+        await recipeDocRef.update({'savedBy': FieldValue.arrayRemove([userId])});
+      } catch (e) {
+        // Non-fatal: log and continue
+        print('Failed to arrayRemove recipe.savedBy: $e');
       }
-    } catch (e) {
-      // Non-fatal: log and continue
-      print('Failed to update recipe.savedBy: $e');
+    } else {
+      // Add recipe to saved list (use atomic arrayUnion to avoid races)
+      print('Adding recipe $recipeId to user $userId savedRecipes');
+      await userDoc.update({'savedRecipes': FieldValue.arrayUnion([recipeId])});
+
+      // Also add userId to recipe.savedBy atomically
+      try {
+        final recipeDocRef = _firestore.collection('recipes').doc(recipeId);
+        await recipeDocRef.update({'savedBy': FieldValue.arrayUnion([userId])});
+      } catch (e) {
+        // Non-fatal: log and continue
+        print('Failed to arrayUnion recipe.savedBy: $e');
+      }
     }
 
     final updatedDoc = await userDoc.get();

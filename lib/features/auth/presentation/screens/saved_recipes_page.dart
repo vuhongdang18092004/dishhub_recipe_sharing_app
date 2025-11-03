@@ -35,7 +35,9 @@ class _SavedRecipesPageState extends State<SavedRecipesPage> {
       ),
       body: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, authState) {
-          final currentUser = authState is AuthAuthenticated ? authState.user : widget.user;
+          final currentUser = authState is AuthAuthenticated
+              ? authState.user
+              : widget.user;
           final savedRecipeIds = currentUser.savedRecipes;
 
           if (savedRecipeIds.isEmpty) {
@@ -43,7 +45,11 @@ class _SavedRecipesPageState extends State<SavedRecipesPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.bookmark_border, size: 80, color: Colors.grey.shade400),
+                  Icon(
+                    Icons.bookmark_border,
+                    size: 80,
+                    color: Colors.grey.shade400,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Chưa có công thức nào được lưu',
@@ -76,11 +82,18 @@ class _SavedRecipesPageState extends State<SavedRecipesPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.bookmark_border, size: 80, color: Colors.grey.shade400),
+                        Icon(
+                          Icons.bookmark_border,
+                          size: 80,
+                          color: Colors.grey.shade400,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'Chưa có công thức nào được lưu',
-                          style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                       ],
                     ),
@@ -116,7 +129,11 @@ class _SavedRecipesPageState extends State<SavedRecipesPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 60,
+                        color: Colors.red,
+                      ),
                       const SizedBox(height: 16),
                       Text(recipeState.message),
                       const SizedBox(height: 16),

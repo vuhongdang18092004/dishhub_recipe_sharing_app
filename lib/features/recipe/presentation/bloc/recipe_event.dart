@@ -25,3 +25,12 @@ class DeleteRecipeById extends RecipeEvent {
   @override
   List<Object?> get props => [id];
 }
+
+class ToggleLike extends RecipeEvent {
+  final String recipeId;
+  final String userId;
+  const ToggleLike({required this.recipeId, required this.userId});
+
+  @override
+  List<Object?> get props => [recipeId, userId];
+}

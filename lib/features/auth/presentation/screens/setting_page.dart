@@ -28,11 +28,16 @@ class SettingPage extends StatelessWidget {
                     CircleAvatar(
                       radius: 50,
                       backgroundColor: Colors.grey.shade300,
-                      backgroundImage: user.photo != null && user.photo!.isNotEmpty
+                      backgroundImage:
+                          user.photo != null && user.photo!.isNotEmpty
                           ? NetworkImage(user.photo!)
                           : null,
                       child: (user.photo == null || user.photo!.isEmpty)
-                          ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                          ? const Icon(
+                              Icons.person,
+                              size: 50,
+                              color: Colors.grey,
+                            )
                           : null,
                     ),
                     const SizedBox(height: 16),
