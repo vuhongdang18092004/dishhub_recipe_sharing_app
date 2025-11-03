@@ -4,6 +4,8 @@
     <application
         android:label="dishhub_recipe_sharing_app"
         android:icon="@mipmap/ic_launcher">
+        android:usesCleartextTraffic="true"
+
 
         <activity
             android:name=".MainActivity"

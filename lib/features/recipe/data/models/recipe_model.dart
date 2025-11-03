@@ -1,5 +1,6 @@
 import '../../domain/entities/recipe_entity.dart';
 import 'recipe_step.dart';
+import 'recipe_comment.dart';
 
 class RecipeModel extends RecipeEntity {
   const RecipeModel({
@@ -13,18 +14,22 @@ class RecipeModel extends RecipeEntity {
     required List<RecipeStep> steps,
     List<String> likes = const [],
     List<String> savedBy = const [],
+    List<RecipeComment> comments = const [],
+    List<String> tags = const [],
   }) : super(
-          id: id,
-          title: title,
-          description: description,
-          photoUrls: photoUrls,
-          videoUrl: videoUrl,
-          creatorId: creatorId,
-          ingredients: ingredients,
-          steps: steps,
-          likes: likes,
-          savedBy: savedBy,
-        );
+         id: id,
+         title: title,
+         description: description,
+         photoUrls: photoUrls,
+         videoUrl: videoUrl,
+         creatorId: creatorId,
+         ingredients: ingredients,
+         steps: steps,
+         likes: likes,
+         savedBy: savedBy,
+         comments: comments,
+         tags: tags,
+       );
 
   factory RecipeModel.fromMap(Map<String, dynamic> map, String docId) {
     return RecipeModel(
@@ -40,6 +45,10 @@ class RecipeModel extends RecipeEntity {
           .toList(),
       likes: List<String>.from(map['likes'] ?? []),
       savedBy: List<String>.from(map['savedBy'] ?? []),
+      comments: (map['comments'] as List<dynamic>? ?? [])
+          .map((e) => RecipeComment.fromMap(e))
+          .toList(),
+      tags: List<String>.from(map['tags'] ?? []),
     );
   }
 
@@ -54,6 +63,8 @@ class RecipeModel extends RecipeEntity {
       'steps': steps.map((e) => e.toMap()).toList(),
       'likes': likes,
       'savedBy': savedBy,
+      'comments': comments.map((e) => e.toMap()).toList(),
+      'tags': tags,
     };
   }
 }
