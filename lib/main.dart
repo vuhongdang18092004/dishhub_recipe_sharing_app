@@ -28,7 +28,6 @@ void main() async {
   final firestore = FirebaseFirestore.instance;
   final googleSignIn = GoogleSignIn();
 
-  // Auth repository
   final authRemoteDataSource = AuthRemoteDataSourceImpl(
     firebaseAuth,
     firestore,
@@ -36,10 +35,8 @@ void main() async {
   );
   final authRepository = AuthRepositoryImpl(authRemoteDataSource);
 
-  // Recipe repository
   final recipeRepository = RecipeRepositoryImpl(firestore);
 
-  // Kiểm tra user hiện tại
   UserEntity? initialUser;
   final currentUser = firebaseAuth.currentUser;
   if (currentUser != null) {
@@ -63,7 +60,6 @@ void main() async {
   runApp(
     MultiBlocProvider(
       providers: [
-        // *** PHIÊN BẢN AUTHBLOC CỦA ĐỒNG ĐỘI (ĐẦY ĐỦ) ***
         BlocProvider<AuthBloc>(
           create: (_) => AuthBloc(
             signUpWithEmail: SignUpWithEmail(authRepository),
@@ -72,11 +68,11 @@ void main() async {
             resetPassword: ResetPassword(authRepository),
             signOut: SignOut(authRepository),
             getCurrentUser: GetCurrentUser(authRepository),
-            toggleSaveRecipe: ToggleSaveRecipe(authRepository), // <-- Đã gộp
+            toggleSaveRecipe: ToggleSaveRecipe(authRepository),
+            sendEmailVerification: SendEmailVerification(authRepository),
           )..add(const AuthCheckStatus()),
         ),
 
-        // *** PHIÊN BẢN RECIPEBLOC ĐÃ GỘP (CẢ 2 TÍNH NĂNG) ***
         BlocProvider<RecipeBloc>(
           create: (_) => RecipeBloc(
             getAllRecipes: GetAllRecipes(recipeRepository),
@@ -84,10 +80,9 @@ void main() async {
             addRecipe: AddRecipe(recipeRepository),
             updateRecipe: UpdateRecipe(recipeRepository),
             deleteRecipe: DeleteRecipe(recipeRepository),
-            toggleLikeRecipe: ToggleLikeRecipe(
-              recipeRepository,
-            ), // <-- Của đồng đội
-            searchRecipes: SearchRecipes(recipeRepository), // <-- Của bạn
+
+            toggleLikeRecipe: ToggleLikeRecipe(recipeRepository),
+            searchRecipes: SearchRecipes(recipeRepository),
           )..add(LoadAllRecipes()),
         ),
       ],

@@ -1,14 +1,23 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-class ZoomableImageScreen extends StatelessWidget {
+class ZoomableImageScreen extends StatefulWidget {
   final String imageUrl;
 
   const ZoomableImageScreen({super.key, required this.imageUrl});
 
   @override
+  State<ZoomableImageScreen> createState() => _ZoomableImageScreenState();
+}
+
+class _ZoomableImageScreenState extends State<ZoomableImageScreen> {
+  @override
   Widget build(BuildContext context) {
-    final isNetwork = imageUrl.startsWith('http');
+    final isNetwork = widget.imageUrl.startsWith('http');
+    final imageWidget = isNetwork
+        ? Image.network(widget.imageUrl, fit: BoxFit.contain)
+        : Image.file(File(widget.imageUrl), fit: BoxFit.contain);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -19,12 +28,13 @@ class ZoomableImageScreen extends StatelessWidget {
       ),
       body: Center(
         child: InteractiveViewer(
-          panEnabled: true,
-          minScale: 0.8,
+          clipBehavior: Clip.none,
+          minScale: 0.5,
           maxScale: 4.0,
-          child: isNetwork
-              ? Image.network(imageUrl)
-              : Image.file(File(imageUrl)),
+
+          scaleEnabled: true,
+
+          child: imageWidget,
         ),
       ),
     );

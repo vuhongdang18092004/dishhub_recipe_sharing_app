@@ -1,16 +1,13 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-// Đảm bảo đường dẫn này chính xác
 import 'package:dishhub_recipe_sharing_app/core/utils/generate_keywords.dart';
 import '../../domain/entities/recipe_entity.dart';
 import '../../domain/usecases/recipe_usecases.dart';
-// Import cho Debounce
 import 'package:rxdart/rxdart.dart';
 
 part 'recipe_event.dart';
 part 'recipe_state.dart';
 
-// Helper cho Debounce
 EventTransformer<T> debounce<T>(Duration duration) {
   return (events, mapper) => events.debounceTime(duration).flatMap(mapper);
 }
@@ -21,10 +18,9 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
   final AddRecipe addRecipe;
   final UpdateRecipe updateRecipe;
   final DeleteRecipe deleteRecipe;
-  final ToggleLikeRecipe toggleLikeRecipe; // <-- PHẦN CỦA ĐỒNG ĐỘI
-  final SearchRecipes searchRecipes; // <-- PHẦN CỦA BẠN
+  final ToggleLikeRecipe toggleLikeRecipe;
+  final SearchRecipes searchRecipes;
 
-  // Biến cache cho danh sách đầy đủ
   List<RecipeEntity> _allRecipes = [];
 
   RecipeBloc({
@@ -33,22 +29,20 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     required this.addRecipe,
     required this.updateRecipe,
     required this.deleteRecipe,
-    required this.toggleLikeRecipe, // <-- PHẦN CỦA ĐỒNG ĐỘI
-    required this.searchRecipes, // <-- PHẦN CỦA BẠN
+    required this.toggleLikeRecipe,
+    required this.searchRecipes,
   }) : super(RecipeInitial()) {
-    // Handler tải tất cả (Đã gộp)
     on<LoadAllRecipes>((event, emit) async {
       emit(RecipeLoading());
       try {
         final recipes = await getAllRecipes();
-        _allRecipes = recipes; // Cache danh sách
+        _allRecipes = recipes;
         emit(RecipeLoaded(recipes));
       } catch (e) {
         emit(RecipeError(e.toString()));
       }
     });
 
-    // Handler thêm (Đã gộp với logic keywords)
     on<AddNewRecipe>((event, emit) async {
       try {
         final keywords = generateKeywords(
@@ -57,7 +51,6 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
           event.recipe.tags,
         );
         final recipeWithKeywords = RecipeEntity(
-          // ... (sao chép tất cả các trường từ event.recipe)
           id: event.recipe.id,
           title: event.recipe.title,
           description: event.recipe.description,
@@ -70,7 +63,6 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
           savedBy: event.recipe.savedBy,
           comments: event.recipe.comments,
           tags: event.recipe.tags,
-          // Gán keywords
           searchKeywords: keywords,
         );
 
@@ -81,7 +73,6 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
       }
     });
 
-    // Handler cập nhật (Đã gộp với logic keywords)
     on<UpdateExistingRecipe>((event, emit) async {
       try {
         final keywords = generateKeywords(
@@ -90,7 +81,6 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
           event.recipe.tags,
         );
         final recipeWithKeywords = RecipeEntity(
-          // ... (sao chép tất cả các trường từ event.recipe)
           id: event.recipe.id,
           title: event.recipe.title,
           description: event.recipe.description,
@@ -103,7 +93,6 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
           savedBy: event.recipe.savedBy,
           comments: event.recipe.comments,
           tags: event.recipe.tags,
-          // Gán keywords
           searchKeywords: keywords,
         );
 
@@ -114,7 +103,6 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
       }
     });
 
-    // Handler xóa (Giữ nguyên)
     on<DeleteRecipeById>((event, emit) async {
       try {
         await deleteRecipe(event.id);
@@ -124,10 +112,8 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
       }
     });
 
-    // Handler ToggleLike (PHẦN CỦA ĐỒNG ĐỘI - GIỮ NGUYÊN)
     on<ToggleLike>((event, emit) async {
       final currentState = state;
-      // If we have the recipes loaded, do an optimistic update so UI updates immediately
       if (currentState is RecipeLoaded) {
         final updatedList = List<RecipeEntity>.from(currentState.recipes);
         final index = updatedList.indexWhere((r) => r.id == event.recipeId);
@@ -156,15 +142,12 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
           );
 
           updatedList[index] = updatedRecipe;
-          // Emit optimistic state
           emit(RecipeLoaded(updatedList));
 
           try {
             await toggleLikeRecipe(event.recipeId, event.userId);
-            // Reconcile with authoritative data
             add(LoadAllRecipes());
           } catch (e) {
-            // Revert on error
             emit(currentState);
             emit(RecipeError(e.toString()));
           }
@@ -172,7 +155,6 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
         }
       }
 
-      // Fallback: no optimistic update possible, call backend and refresh
       try {
         await toggleLikeRecipe(event.recipeId, event.userId);
         add(LoadAllRecipes());
@@ -181,19 +163,16 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
       }
     });
 
-    // Handler Tìm kiếm (PHẦN CỦA BẠN - THÊM VÀO)
     on<SearchRecipesEvent>(
       _onSearchRecipes,
       transformer: debounce(const Duration(milliseconds: 300)),
     );
   }
 
-  // Hàm xử lý Tìm kiếm (PHẦN CỦA BẠN - THÊM VÀO)
   Future<void> _onSearchRecipes(
     SearchRecipesEvent event,
     Emitter<RecipeState> emit,
   ) async {
-    // Nếu thanh tìm kiếm trống, phát ra danh sách đầy đủ đã lưu
     if (event.query.isEmpty) {
       emit(RecipeLoaded(_allRecipes));
       return;

@@ -25,10 +25,9 @@ class RecipeDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return BlocBuilder<RecipeBloc, RecipeState>(
       builder: (context, recipeState) {
-        // Choose the authoritative recipe from RecipeBloc when available so
-        // the detail page reflects optimistic updates and reloads.
         final RecipeEntity currentRecipe;
         if (recipeState is RecipeLoaded) {
           final matches = recipeState.recipes.where((r) => r.id == recipe.id);
@@ -45,7 +44,6 @@ class RecipeDetailPage extends StatelessWidget {
             backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
             foregroundColor: isDarkMode ? Colors.white : Colors.black,
             actions: [
-              // Like action
               BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, authState) {
                   final user = authState is AuthAuthenticated

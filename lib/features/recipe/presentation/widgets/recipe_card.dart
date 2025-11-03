@@ -77,7 +77,7 @@ class RecipeCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          // Like button and count
+
                           InkWell(
                             onTap: user != null
                                 ? () {
@@ -116,9 +116,6 @@ class RecipeCard extends StatelessWidget {
                           InkWell(
                             onTap: user != null
                                 ? () {
-                                    // Quick debug to ensure tap reaches this widget
-                                    // and the event is dispatched.
-                                    // TODO: remove debug print after verifying behavior.
                                     print(
                                       'RecipeCard: bookmark tapped for recipe ${recipe.id}',
                                     );
@@ -129,7 +126,6 @@ class RecipeCard extends StatelessWidget {
                                 : null,
                             borderRadius: BorderRadius.circular(20),
                             child: Padding(
-                              // Increase tappable area slightly to make the icon easier to hit.
                               padding: const EdgeInsets.all(8.0),
                               child: Icon(
                                 isSaved

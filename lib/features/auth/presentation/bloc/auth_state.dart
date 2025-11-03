@@ -28,8 +28,14 @@ class AuthSignedOut extends AuthState {
 }
 
 class AuthPasswordReset extends AuthState {
-  const AuthPasswordReset();
+  final String message;
+
+  const AuthPasswordReset(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }
+
 
 class AuthError extends AuthState {
   final String message;

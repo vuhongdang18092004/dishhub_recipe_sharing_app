@@ -15,6 +15,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignOut signOut;
   final GetCurrentUser getCurrentUser;
   final ToggleSaveRecipe toggleSaveRecipe;
+  final SendEmailVerification sendEmailVerification;
 
   AuthBloc({
     required this.signUpWithEmail,
@@ -24,8 +25,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.signOut,
     required this.getCurrentUser,
     required this.toggleSaveRecipe,
+    required this.sendEmailVerification,
   }) : super(AuthInitial()) {
-    // Track recipe IDs currently being toggled to prevent concurrent toggles
     final Set<String> _processingToggles = <String>{};
     on<AuthSignUp>((event, emit) async {
       emit(AuthLoading());
@@ -35,9 +36,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           event.password,
           event.name,
         );
-        emit(AuthAuthenticated(user));
+        try {
+          await sendEmailVerification();
+        } catch (_) {
+        }
+        emit(
+          AuthVerificationEmailSent(
+            "Đăng ký thành công! Vui lòng kiểm tra email ${event.email} để xác minh tài khoản trước khi đăng nhập.",
+          ),
+        );
       } catch (e) {
-        emit(AuthError(e.toString()));
+        emit(AuthError("Không thể đăng ký: ${e.toString()}"));
       }
     });
 
@@ -62,11 +71,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     });
 
     on<AuthResetPassword>((event, emit) async {
+      emit(AuthLoading());
       try {
         await resetPassword(event.email);
-        emit(AuthPasswordReset());
+        emit(
+          AuthPasswordReset(
+            "Email đặt lại mật khẩu đã được gửi tới ${event.email}.",
+          ),
+        );
       } catch (e) {
-        emit(AuthError(e.toString()));
+        emit(AuthError("Không thể gửi email: ${e.toString()}"));
       }
     });
 
@@ -97,12 +111,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthToggleSaveRecipe>((event, emit) async {
       final currentState = state;
       if (currentState is! AuthAuthenticated) return;
-
-      // prevent concurrent toggles for the same recipe
+      
       if (_processingToggles.contains(event.recipeId)) return;
       _processingToggles.add(event.recipeId);
 
-      // Optimistic update: toggle locally first so UI responds immediately
       final currentSaved = List<String>.from(currentState.user.savedRecipes);
       final optimisticList = List<String>.from(currentSaved);
       if (optimisticList.contains(event.recipeId)) {
@@ -124,13 +136,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           currentState.user.id,
           event.recipeId,
         );
-        // Replace optimistic user with authoritative user from backend
         print(
           'AuthBloc: backend updated savedRecipes -> ${updatedUser.savedRecipes}',
         );
         emit(AuthAuthenticated(updatedUser));
       } catch (e) {
-        // Revert to previous state on error
         print('Error toggling save recipe: $e');
         emit(currentState);
       } finally {
@@ -138,4 +148,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     });
   }
+}
+
+class AuthVerificationEmailSent extends AuthState {
+  final String message;
+  const AuthVerificationEmailSent(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }

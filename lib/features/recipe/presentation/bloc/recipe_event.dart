@@ -29,7 +29,6 @@ class DeleteRecipeById extends RecipeEvent {
   List<Object?> get props => [id];
 }
 
-// *** PHẦN CỦA ĐỒNG ĐỘI (PHẢI GIỮ LẠI) ***
 class ToggleLike extends RecipeEvent {
   final String recipeId;
   final String userId;
@@ -38,9 +37,7 @@ class ToggleLike extends RecipeEvent {
   @override
   List<Object?> get props => [recipeId, userId];
 }
-// *** HẾT PHẦN CỦA ĐỒNG ĐỘI ***
 
-// *** PHẦN CỦA BẠN (ĐÃ THÊM VÀO) ***
 class SearchRecipesEvent extends RecipeEvent {
   final String query;
   const SearchRecipesEvent(this.query);
@@ -48,4 +45,3 @@ class SearchRecipesEvent extends RecipeEvent {
   @override
   List<Object?> get props => [query];
 }
-// *** HẾT PHẦN CỦA BẠN ***
