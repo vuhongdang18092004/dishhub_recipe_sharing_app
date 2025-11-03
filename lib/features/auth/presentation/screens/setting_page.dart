@@ -61,6 +61,15 @@ class SettingPage extends StatelessWidget {
               const Divider(),
 
               ListTile(
+                leading: const Icon(Icons.menu_book),
+                title: const Text("Công thức của bạn"),
+                subtitle: const Text("Quản lý các công thức bạn đã tạo"),
+                onTap: () {
+                  context.push('/my-recipes', extra: user);
+                },
+              ),
+
+              ListTile(
                 leading: const Icon(Icons.bookmark_outline),
                 title: const Text("Kho lưu trữ công thức"),
                 subtitle: const Text("Xem lại các công thức bạn đã lưu"),

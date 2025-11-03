@@ -10,6 +10,9 @@ import '../features/auth/presentation/screens/account_info_page.dart';
 import '../features/auth/presentation/screens/saved_recipes_page.dart';
 import '../features/auth/domain/entities/user_entity.dart';
 import '../features/recipe/presentation/screens/recipe_detail_page.dart';
+import '../features/recipe/presentation/screens/search_page.dart';
+import '../features/recipe/presentation/screens/my_recipes_page.dart';
+import '../features/recipe/presentation/screens/edit_recipe_page.dart';
 import '../features/recipe/domain/entities/recipe_entity.dart';
 import '../widgets/scaffold_with_navbar.dart';
 
@@ -42,6 +45,28 @@ class AppRouter {
                     child: child,
                   );
                 },
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/search',
+        pageBuilder: (context, state) {
+          final user = state.extra as UserEntity;
+          return MaterialPage(
+            key: state.pageKey,
+            child: SearchPage(user: user),
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/my-recipes',
+        pageBuilder: (context, state) {
+          final user = state.extra as UserEntity;
+          return MaterialPage(
+            key: state.pageKey,
+            child: MyRecipesPage(user: user),
           );
         },
       ),
@@ -134,6 +159,17 @@ class AppRouter {
                     child: child,
                   );
                 },
+          );
+        },
+      ),
+      
+      GoRoute(
+        path: '/edit-recipe',
+        pageBuilder: (context, state) {
+          final recipe = state.extra as RecipeEntity;
+          return MaterialPage(
+            key: state.pageKey,
+            child: EditRecipePage(recipe: recipe),
           );
         },
       ),

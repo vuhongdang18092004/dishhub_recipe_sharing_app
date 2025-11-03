@@ -31,7 +31,6 @@ class DeleteRecipe {
   Future<void> call(String id) => repository.deleteRecipe(id);
 }
 
-// *** PHẦN CỦA ĐỒNG ĐỘI (GIỮ LẠI) ***
 class ToggleLikeRecipe {
   final RecipeRepository repository;
   ToggleLikeRecipe(this.repository);
@@ -39,20 +38,15 @@ class ToggleLikeRecipe {
   Future<void> call(String recipeId, String userId) =>
       repository.toggleLike(recipeId, userId);
 }
-// *** HẾT PHẦN CỦA ĐỒNG ĐỘI ***
 
-// *** PHẦN CỦA BẠN (THÊM VÀO) ***
 class SearchRecipes {
   final RecipeRepository repository;
   SearchRecipes(this.repository);
 
   Future<List<RecipeEntity>> call(String query) async {
-    // Logic nghiệp vụ: không tìm kiếm nếu chuỗi rỗng
     if (query.isEmpty) {
       return [];
     }
-    // Chuyển sang chữ thường để đảm bảo
     return repository.searchRecipes(query.toLowerCase());
   }
 }
-// *** HẾT PHẦN CỦA BẠN ***

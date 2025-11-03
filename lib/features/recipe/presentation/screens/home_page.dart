@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../domain/entities/recipe_entity.dart'; 
+import '../../domain/entities/recipe_entity.dart';
 import '../bloc/recipe_bloc.dart';
 import '../widgets/recipe_card.dart';
 
@@ -31,26 +32,35 @@ class _HomePageState extends State<HomePage> {
           builder: (context, authState) {
             final currentUser = authState is AuthAuthenticated
                 ? authState.user
-                : widget.user; 
+                : widget.user;
+
             return Column(
               children: [
-                Padding(
+                Container(
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: TextField(
-                    onChanged: (value) {
-                      context.read<RecipeBloc>().add(SearchRecipesEvent(value));
+                  child: InkWell(
+                    onTap: () {
+                      context.push('/search', extra: currentUser);
                     },
-                    decoration: InputDecoration(
-                      hintText: 'Tìm công thức (gõ 1 từ khóa)...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    child: IgnorePointer(
+                      child: TextField(
+                        enabled: false,
+                        decoration: InputDecoration(
+                          hintText: 'Tìm công thức...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: Theme.of(context).cardColor,
+                        ),
                       ),
-                      filled: true,
-                      fillColor: Theme.of(context).cardColor,
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 8),
 
                 Expanded(
                   child: BlocBuilder<RecipeBloc, RecipeState>(
@@ -59,15 +69,14 @@ class _HomePageState extends State<HomePage> {
                         return const Center(child: CircularProgressIndicator());
                       }
                       if (state is RecipeSearchLoaded) {
-                        if (state.searchResults.isEmpty) {
+                        final results = state.searchResults;
+                        if (results.isEmpty) {
                           return const Center(child: Text('Không tìm thấy kết quả.'));
                         }
-                        return _buildRecipeList(
-                            context, state.searchResults, currentUser);
+                        return _buildRecipeList(context, results, currentUser);
                       }
                       if (state is RecipeSearchError) {
-                        return Center(
-                            child: Text('Lỗi tìm kiếm: ${state.message}'));
+                        return Center(child: Text('Lỗi tìm kiếm: ${state.message}'));
                       }
 
                       if (state is RecipeLoading) {
@@ -81,7 +90,7 @@ class _HomePageState extends State<HomePage> {
                       } else if (state is RecipeError) {
                         return Center(child: Text('Lỗi: ${state.message}'));
                       }
-                      
+
                       return const Center(child: Text('Gõ vào ô tìm kiếm...'));
                     },
                   ),
@@ -90,12 +99,6 @@ class _HomePageState extends State<HomePage> {
             );
           },
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          GoRouter.of(context).push('/add'); 
-        },
-        child: const Icon(Icons.add),
       ),
     );
   }
@@ -111,7 +114,7 @@ class _HomePageState extends State<HomePage> {
           recipe: recipe,
           currentUser: currentUser,
           onTap: () {
-            GoRouter.of(context).push('/recipe-detail', extra: recipe);
+            context.push('/recipe-detail', extra: recipe);
           },
         );
       },

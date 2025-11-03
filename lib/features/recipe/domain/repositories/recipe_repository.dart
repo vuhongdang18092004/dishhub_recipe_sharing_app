@@ -11,9 +11,7 @@ abstract class RecipeRepository {
 
   Future<void> deleteRecipe(String id);
 
-  // *** PHẦN CỦA ĐỒNG ĐỘI (GIỮ LẠI) ***
   Future<void> toggleLike(String recipeId, String userId);
-
-  // *** PHẦN CỦA BẠN (THÊM VÀO) ***
+  
   Future<List<RecipeEntity>> searchRecipes(String query);
 }
