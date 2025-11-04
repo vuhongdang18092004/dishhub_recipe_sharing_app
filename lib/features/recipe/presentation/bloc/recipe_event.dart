@@ -11,6 +11,7 @@ class LoadAllRecipes extends RecipeEvent {}
 
 class AddNewRecipe extends RecipeEvent {
   final RecipeEntity recipe;
+  
   const AddNewRecipe(this.recipe);
 
   @override
@@ -19,6 +20,7 @@ class AddNewRecipe extends RecipeEvent {
 
 class UpdateExistingRecipe extends RecipeEvent {
   final RecipeEntity recipe;
+  
   const UpdateExistingRecipe(this.recipe);
 
   @override
@@ -27,6 +29,7 @@ class UpdateExistingRecipe extends RecipeEvent {
 
 class DeleteRecipeById extends RecipeEvent {
   final String id;
+  
   const DeleteRecipeById(this.id);
 
   @override
@@ -36,6 +39,7 @@ class DeleteRecipeById extends RecipeEvent {
 class ToggleLike extends RecipeEvent {
   final String recipeId;
   final String userId;
+  
   const ToggleLike({required this.recipeId, required this.userId});
 
   @override
@@ -44,6 +48,7 @@ class ToggleLike extends RecipeEvent {
 
 class SearchRecipesEvent extends RecipeEvent {
   final String query;
+  
   const SearchRecipesEvent(this.query);
 
   @override
@@ -53,6 +58,7 @@ class SearchRecipesEvent extends RecipeEvent {
 class AddNewComment extends RecipeEvent {
   final String recipeId;
   final RecipeComment comment;
+  
   const AddNewComment({required this.recipeId, required this.comment});
 
   @override

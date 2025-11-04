@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../domain/entities/recipe_entity.dart';
 import '../../domain/usecases/recipe_usecases.dart';
@@ -35,14 +36,11 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     this.addComment, 
   }) : super(RecipeInitial()) {
     on<LoadAllRecipes>(_onLoadAllRecipes);
-
     on<AddNewRecipe>(_onAddRecipe);
     on<UpdateExistingRecipe>(_onUpdateRecipe);
     on<DeleteRecipeById>(_onDeleteRecipe);
-
     on<ToggleLike>(_onToggleLike);
     on<AddNewComment>(_onAddComment);
-
     on<SearchRecipesEvent>(
       _onSearchRecipes,
       transformer: debounce(const Duration(milliseconds: 300)),
@@ -59,8 +57,10 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
       _allRecipes = recipes;
       emit(RecipeLoaded(recipes));
     } catch (e) {
-      print('Lỗi tải công thức: $e');
-      emit(RecipeError(e.toString()));
+      if (kDebugMode) {
+        print('Lỗi tải công thức: $e');
+      }
+      emit(RecipeError('Lỗi tải công thức: $e'));
     }
   }
 
@@ -68,11 +68,17 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     AddNewRecipe event,
     Emitter<RecipeState> emit,
   ) async {
+    emit(RecipeAdding());
     try {
       await addRecipe(event.recipe);
+      emit(RecipeAddedSuccess(event.recipe));
       add(LoadAllRecipes());
+      
     } catch (e) {
-      emit(RecipeError(e.toString()));
+      if (kDebugMode) {
+        print('Lỗi thêm công thức: $e');
+      }
+      emit(RecipeError('Lỗi thêm công thức: $e'));
     }
   }
 
@@ -80,11 +86,18 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     UpdateExistingRecipe event,
     Emitter<RecipeState> emit,
   ) async {
+    emit(RecipeUpdating());
+    
     try {
       await updateRecipe(event.recipe);
+      emit(RecipeUpdatedSuccess(event.recipe));
+      
       add(LoadAllRecipes());
     } catch (e) {
-      emit(RecipeError(e.toString()));
+      if (kDebugMode) {
+        print('Lỗi cập nhật công thức: $e');
+      }
+      emit(RecipeError('Lỗi cập nhật công thức: $e'));
     }
   }
 
@@ -92,11 +105,17 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     DeleteRecipeById event,
     Emitter<RecipeState> emit,
   ) async {
+    emit(RecipeDeleting());
+    
     try {
       await deleteRecipe(event.id);
+      emit(RecipeDeletedSuccess(event.id));
       add(LoadAllRecipes());
     } catch (e) {
-      emit(RecipeError(e.toString()));
+      if (kDebugMode) {
+        print('Lỗi xóa công thức: $e');
+      }
+      emit(RecipeError('Lỗi xóa công thức: $e'));
     }
   }
 
@@ -105,7 +124,6 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     Emitter<RecipeState> emit,
   ) async {
     final currentState = state;
-    
     if (currentState is RecipeLoaded) {
       final updatedList = List<RecipeEntity>.from(currentState.recipes);
       final index = updatedList.indexWhere((r) => r.id == event.recipeId);
@@ -120,18 +138,19 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
           newLikes.add(event.userId);
         }
 
-        final updatedRecipe = recipe.copyWith(likes: newLikes); 
-
+        final updatedRecipe = recipe.copyWith(likes: newLikes);
         updatedList[index] = updatedRecipe;
-        emit(RecipeLoaded(updatedList)); 
+        emit(RecipeLoaded(updatedList));
       }
     }
 
     try {
       await toggleLikeRecipe(event.recipeId, event.userId);
-      add(LoadAllRecipes()); 
     } catch (e) {
-      emit(RecipeError(e.toString())); 
+      if (kDebugMode) {
+        print('Lỗi toggle like: $e');
+      }
+      add(LoadAllRecipes());
     }
   }
 
@@ -140,18 +159,21 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     Emitter<RecipeState> emit,
   ) async {
     if (addComment == null) {
-      print('Lỗi cấu hình: UseCase AddComment chưa được cung cấp.');
-      emit(RecipeError("Cảnh báo: Tính năng bình luận chưa được kích hoạt/cấu hình API."));
+      if (kDebugMode) {
+        print('Lỗi cấu hình: UseCase AddComment chưa được cung cấp.');
+      }
+      emit(RecipeError("Cảnh báo: Tính năng bình luận chưa được kích hoạt."));
       return;
     }
 
     try {
       await addComment!(event.recipeId, event.comment);
-      add(LoadAllRecipes()); 
-
+      add(LoadAllRecipes());
     } catch (e) {
-      print('Lỗi gửi comment lên Firestore: $e'); 
-      emit(RecipeError('Không thể thêm bình luận: ${e.toString()}'));
+      if (kDebugMode) {
+        print('Lỗi thêm bình luận: $e');
+      }
+      emit(RecipeError('Không thể thêm bình luận: $e'));
     }
   }
 
@@ -169,7 +191,10 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
       final recipes = await searchRecipes(event.query);
       emit(RecipeSearchLoaded(recipes));
     } catch (e) {
-      emit(RecipeSearchError(e.toString()));
+      if (kDebugMode) {
+        print('Lỗi tìm kiếm công thức: $e');
+      }
+      emit(RecipeSearchError('Lỗi tìm kiếm: $e'));
     }
   }
 }

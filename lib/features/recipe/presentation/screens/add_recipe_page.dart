@@ -34,6 +34,8 @@ class _AddRecipePageState extends State<AddRecipePage> {
   XFile? video;
   final ImagePicker _picker = ImagePicker();
 
+  bool _isSubmitting = false;
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -44,11 +46,15 @@ class _AddRecipePageState extends State<AddRecipePage> {
 
   Future<void> _pickPhoto() async {
     final picked = await _picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) setState(() => photos.add(picked));
+    if (picked != null && mounted) {
+      setState(() => photos.add(picked));
+    }
   }
 
   void _removePhoto(XFile photo) {
-    setState(() => photos.remove(photo));
+    if (mounted) {
+      setState(() => photos.remove(photo));
+    }
   }
 
   Future<void> _pickVideo() async {
@@ -59,24 +65,31 @@ class _AddRecipePageState extends State<AddRecipePage> {
     final savedPath = '${tempDir.path}/${picked.name}';
     await File(picked.path).copy(savedPath);
 
-    setState(() => video = XFile(savedPath));
+    if (mounted) {
+      setState(() => video = XFile(savedPath));
+    }
   }
 
   void _removeVideo() {
-    setState(() => video = null);
+    if (mounted) {
+      setState(() => video = null);
+    }
   }
 
   void _addIngredient(String ingredient) {
     if (ingredient.trim().isEmpty) return;
-    setState(() => ingredients.add(ingredient.trim()));
+    if (mounted) {
+      setState(() => ingredients.add(ingredient.trim()));
+    }
   }
 
   Future<void> _addStepDialog() async {
     final stepDescController = TextEditingController();
     XFile? stepPhoto;
 
-    await showDialog(
+    await showDialog<void>(
       context: context,
+      barrierDismissible: true,
       builder: (_) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Thêm bước'),
@@ -111,21 +124,23 @@ class _AddRecipePageState extends State<AddRecipePage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.of(context).pop(),
               child: const Text('Hủy'),
             ),
             ElevatedButton(
               onPressed: () {
                 if (stepDescController.text.trim().isEmpty) return;
-                setState(() {
-                  steps.add(
-                    RecipeStep(
-                      description: stepDescController.text.trim(),
-                      photoUrl: stepPhoto?.path,
-                    ),
-                  );
-                });
-                Navigator.pop(context);
+                if (mounted) {
+                  setState(() {
+                    steps.add(
+                      RecipeStep(
+                        description: stepDescController.text.trim(),
+                        photoUrl: stepPhoto?.path,
+                      ),
+                    );
+                  });
+                }
+                Navigator.of(context).pop();
               },
               child: const Text('Thêm'),
             ),
@@ -138,33 +153,377 @@ class _AddRecipePageState extends State<AddRecipePage> {
   Future<String?> uploadToCloudinary(File file, {bool isVideo = false}) async {
     final cloudName = dotenv.env['CLOUDINARY_CLOUD_NAME'];
     final uploadPreset = dotenv.env['CLOUDINARY_UPLOAD_PRESET'];
-    if (cloudName == null || uploadPreset == null) return null;
+    if (cloudName == null || uploadPreset == null) {
+      debugPrint('Cloudinary configuration missing');
+      return null;
+    }
+
+    if (!await file.exists()) {
+      debugPrint('File does not exist: ${file.path}');
+      return null;
+    }
 
     final uri = Uri.parse(
       'https://api.cloudinary.com/v1_1/$cloudName/${isVideo ? 'video' : 'image'}/upload',
     );
 
-    final request = http.MultipartRequest('POST', uri)
-      ..fields['upload_preset'] = uploadPreset
-      ..files.add(await http.MultipartFile.fromPath('file', file.path));
+    try {
+      final request = http.MultipartRequest('POST', uri)
+        ..fields['upload_preset'] = uploadPreset
+        ..files.add(await http.MultipartFile.fromPath('file', file.path));
 
-    final response = await request.send();
-    if (response.statusCode == 200) {
-      final resBody = await response.stream.bytesToString();
-      final data = json.decode(resBody);
-      return data['secure_url'] as String?;
-    } else {
-      debugPrint('Cloudinary upload failed: ${response.statusCode}');
+      debugPrint('Uploading to Cloudinary: ${file.path}');
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final resBody = await response.stream.bytesToString();
+        final data = json.decode(resBody);
+        debugPrint('Upload successful: ${data['secure_url']}');
+        return data['secure_url'] as String?;
+      } else {
+        debugPrint('Cloudinary upload failed: ${response.statusCode}');
+        final errorBody = await response.stream.bytesToString();
+        debugPrint('Error response: $errorBody');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Upload error: $e');
       return null;
     }
   }
 
+  Future<bool> _validateFiles() async {
+    for (var photo in photos) {
+      final file = File(photo.path);
+      if (!await file.exists()) {
+        debugPrint('Photo not found: ${photo.path}');
+        return false;
+      }
+    }
+
+    for (var step in steps) {
+      if (step.photoUrl != null) {
+        final file = File(step.photoUrl!);
+        if (!await file.exists()) {
+          debugPrint('Step photo not found: ${step.photoUrl}');
+          return false;
+        }
+      }
+    }
+
+    if (video != null) {
+      final file = File(video!.path);
+      if (!await file.exists()) {
+        debugPrint('Video not found: ${video!.path}');
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<RecipeBloc, RecipeState>(
+      listener: (context, state) {
+        if (state is RecipeAddedSuccess) {
+          _handleRecipeAddedSuccess(context);
+        } else if (state is RecipeError) {
+          _handleRecipeError(state.message);
+        }
+      },
+      child: PopScope(
+        canPop: !_isSubmitting,
+        onPopInvoked: (didPop) {
+          if (!didPop && _isSubmitting) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Đang xử lý, vui lòng đợi...'),
+                duration: Duration(seconds: 1),
+              ),
+            );
+          }
+        },
+        child: Scaffold(
+          body: Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    MediaCard(
+                      photos: photos,
+                      video: video,
+                      pickPhoto: _pickPhoto,
+                      pickVideo: _pickVideo,
+                      onRemovePhoto: _removePhoto,
+                      onRemoveVideo: _removeVideo,
+                    ),
+                    const SizedBox(height: 16),
+
+                    Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: _titleController,
+                              decoration: const InputDecoration(
+                                labelText: 'Tiêu đề',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextField(
+                              controller: _descriptionController,
+                              decoration: const InputDecoration(
+                                labelText: 'Mô tả',
+                                border: OutlineInputBorder(),
+                              ),
+                              maxLines: 3,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Nguyên liệu',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _ingredientController,
+                                    decoration: const InputDecoration(
+                                      hintText: 'Nhập nguyên liệu',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    onSubmitted: (value) {
+                                      _addIngredient(value);
+                                      _ingredientController.clear();
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.add_circle,
+                                    color: Colors.green,
+                                  ),
+                                  iconSize: 32,
+                                  onPressed: () {
+                                    _addIngredient(_ingredientController.text);
+                                    _ingredientController.clear();
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ...ingredients.map(
+                              (ing) => Card(
+                                margin: const EdgeInsets.symmetric(vertical: 4),
+                                child: ListTile(
+                                  title: Text(ing),
+                                  trailing: IconButton(
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                    onPressed: () =>
+                                        setState(() => ingredients.remove(ing)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    TagCard(
+                      tags: tags,
+                      onUpdateTags: (newTags) {
+                        setState(
+                          () => tags
+                            ..clear()
+                            ..addAll(newTags),
+                        );
+                      },
+                    ),
+
+                    Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Các bước thực hiện',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                ElevatedButton.icon(
+                                  onPressed: _addStepDialog,
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Thêm bước'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color.fromRGBO(
+                                      240,
+                                      144,
+                                      48,
+                                      1,
+                                    ),
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ...steps.asMap().entries.map((entry) {
+                              final i = entry.key;
+                              final step = entry.value;
+                              return Card(
+                                margin: const EdgeInsets.symmetric(vertical: 4),
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: const Color.fromRGBO(
+                                      240,
+                                      144,
+                                      48,
+                                      1,
+                                    ),
+                                    foregroundColor: Colors.white,
+                                    child: Text('${i + 1}'),
+                                  ),
+                                  title: Text(
+                                    'Bước ${i + 1}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(step.description),
+                                      if (step.photoUrl != null) ...[
+                                        const SizedBox(height: 8),
+                                        Image.file(
+                                          File(step.photoUrl!),
+                                          width: 100,
+                                          height: 80,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  trailing: IconButton(
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                    onPressed: () =>
+                                        setState(() => steps.removeAt(i)),
+                                  ),
+                                ),
+                              );
+                            }),
+                            if (steps.isEmpty)
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Center(
+                                  child: Text(
+                                    'Chưa có bước nào được thêm',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 80),
+                  ],
+                ),
+              ),
+
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 0,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromRGBO(240, 144, 48, 1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    minimumSize: const Size(double.infinity, 50),
+                    elevation: 4,
+                  ),
+                  onPressed: _isSubmitting ? null : _submit,
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Text(
+                          'Thêm công thức',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+
+              if (_isSubmitting)
+                Container(
+                  color: Colors.black54,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _submit() async {
+    if (_isSubmitting || !mounted) return;
+
     final title = _titleController.text.trim();
     final description = _descriptionController.text.trim();
 
     if (title.isEmpty || description.isEmpty) {
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng nhập tiêu đề và mô tả')),
       );
@@ -173,243 +532,139 @@ class _AddRecipePageState extends State<AddRecipePage> {
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Bạn cần đăng nhập để tạo công thức')),
       );
       return;
     }
 
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
-    List<String> photoUrls = [];
-    for (var photo in photos) {
-      final url = await uploadToCloudinary(File(photo.path));
-      if (url != null) photoUrls.add(url);
-    }
-
-    List<RecipeStep> uploadedSteps = [];
-    for (var step in steps) {
-      String? stepUrl;
-      if (step.photoUrl != null) {
-        stepUrl = await uploadToCloudinary(File(step.photoUrl!));
-      }
-      uploadedSteps.add(
-        RecipeStep(description: step.description, photoUrl: stepUrl),
+    final areFilesValid = await _validateFiles();
+    if (!areFilesValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Một số file không tồn tại. Vui lòng chọn lại.'),
+        ),
       );
+      return;
     }
 
-    String? videoUrl;
-    if (video != null && await File(video!.path).exists()) {
-      videoUrl = await uploadToCloudinary(File(video!.path), isVideo: true);
+    setState(() => _isSubmitting = true);
+
+    try {
+      List<String> photoUrls = [];
+      for (var photo in photos) {
+        final file = File(photo.path);
+        if (await file.exists()) {
+          final url = await uploadToCloudinary(file);
+          if (url != null) {
+            photoUrls.add(url);
+            debugPrint('Uploaded photo: $url');
+          }
+        }
+      }
+
+      List<RecipeStep> uploadedSteps = [];
+      for (var step in steps) {
+        String? stepUrl;
+        if (step.photoUrl != null) {
+          final file = File(step.photoUrl!);
+          if (await file.exists()) {
+            stepUrl = await uploadToCloudinary(file);
+          }
+        }
+        uploadedSteps.add(
+          RecipeStep(description: step.description, photoUrl: stepUrl),
+        );
+      }
+
+      String? videoUrl;
+      if (video != null) {
+        final file = File(video!.path);
+        if (await file.exists()) {
+          videoUrl = await uploadToCloudinary(file, isVideo: true);
+        }
+      }
+
+      final newRecipe = RecipeEntity(
+        id: '',
+        title: title,
+        description: description,
+        photoUrls: photoUrls,
+        videoUrl: videoUrl,
+        creatorId: user.uid,
+        ingredients: ingredients,
+        steps: uploadedSteps,
+        likes: [],
+        savedBy: [],
+        comments: [],
+        tags: tags,
+      );
+
+      if (mounted) {
+        context.read<RecipeBloc>().add(AddNewRecipe(newRecipe));
+      }
+    } catch (e) {
+      debugPrint('Error submitting recipe: $e');
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi khi thêm công thức: $e')));
+      }
     }
-
-    final newRecipe = RecipeEntity(
-      id: '',
-      title: title,
-      description: description,
-      photoUrls: photoUrls,
-      videoUrl: videoUrl,
-      creatorId: user.uid,
-      ingredients: ingredients,
-      steps: uploadedSteps,
-      likes: [],
-      savedBy: [],
-      tags: tags,
-    );
-
-    if (!mounted) return;
-    context.read<RecipeBloc>().add(AddNewRecipe(newRecipe));
-    Navigator.pop(context);
-    Navigator.pop(context);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                MediaCard(
-                  photos: photos,
-                  video: video,
-                  pickPhoto: _pickPhoto,
-                  pickVideo: _pickVideo,
-                  onRemovePhoto: _removePhoto,
-                  onRemoveVideo: _removeVideo,
-                ),
-                const SizedBox(height: 16),
+  void _handleRecipeAddedSuccess(BuildContext context) {
+    if (!mounted) return;
 
-                Card(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _titleController,
-                          decoration: const InputDecoration(
-                            labelText: 'Tiêu đề',
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _descriptionController,
-                          decoration: const InputDecoration(labelText: 'Mô tả'),
-                          maxLines: 3,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+    setState(() {
+      _isSubmitting = false;
+      _titleController.clear();
+      _descriptionController.clear();
+      _ingredientController.clear();
+      ingredients.clear();
+      steps.clear();
+      photos.clear();
+      tags.clear();
+      video = null;
+    });
 
-                Card(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Nguyên liệu',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _ingredientController,
-                                decoration: const InputDecoration(
-                                  hintText: 'Nhập nguyên liệu',
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add),
-                              onPressed: () {
-                                _addIngredient(_ingredientController.text);
-                                _ingredientController.clear();
-                              },
-                            ),
-                          ],
-                        ),
-                        ...ingredients.map(
-                          (ing) => ListTile(
-                            title: Text(ing),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () =>
-                                  setState(() => ingredients.remove(ing)),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            SizedBox(width: 8),
+            Text('Công thức đã được thêm thành công!'),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
+      ),
+    );
 
-                TagCard(
-                  tags: tags,
-                  onUpdateTags: (newTags) {
-                    setState(
-                      () => tags
-                        ..clear()
-                        ..addAll(newTags),
-                    );
-                  },
-                ),
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop(true);
+      }
+    });
+  }
 
-                Card(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Các bước',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            TextButton.icon(
-                              onPressed: _addStepDialog,
-                              icon: const Icon(Icons.add),
-                              label: const Text('Thêm bước'),
-                            ),
-                          ],
-                        ),
-                        ...steps.asMap().entries.map((entry) {
-                          final i = entry.key;
-                          final step = entry.value;
-                          return ListTile(
-                            leading: step.photoUrl != null
-                                ? Image.file(
-                                    File(step.photoUrl!),
-                                    width: 50,
-                                    height: 50,
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
-                            title: Text('${i + 1}.'),
-                            subtitle: Text(step.description),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () =>
-                                  setState(() => steps.removeAt(i)),
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                ),
+  void _handleRecipeError(String errorMessage) {
+    if (!mounted) return;
 
-                const SizedBox(height: 50),
-              ],
-            ),
-          ),
+    setState(() => _isSubmitting = false);
 
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 0,
-            child: Container(
-              decoration: const BoxDecoration(borderRadius: BorderRadius.zero),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromRGBO(
-                    240,
-                    144,
-                    48,
-                    1,
-                  ),
-                  foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.black),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero,
-                  ),
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-                onPressed: _submit,
-                child: const Text(
-                  'Thêm công thức',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
-            ),
-          ),
-        ],
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(errorMessage)),
+          ],
+        ),
+        backgroundColor: Colors.red,
       ),
     );
   }
@@ -467,7 +722,7 @@ class MediaCard extends StatelessWidget {
                         top: 4,
                         right: 4,
                         child: Material(
-                          color: Colors.black54,
+                          color: Colors.red,
                           shape: const CircleBorder(),
                           child: InkWell(
                             customBorder: const CircleBorder(),
@@ -475,9 +730,9 @@ class MediaCard extends StatelessWidget {
                             child: const Padding(
                               padding: EdgeInsets.all(6),
                               child: Icon(
-                                Icons.delete,
+                                Icons.close,
                                 color: Colors.white,
-                                size: 18,
+                                size: 16,
                               ),
                             ),
                           ),
@@ -494,8 +749,19 @@ class MediaCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey),
                     ),
-                    child: const Icon(Icons.add_a_photo, color: Colors.grey),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_a_photo, color: Colors.grey, size: 24),
+                        SizedBox(height: 4),
+                        Text(
+                          'Thêm',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -536,7 +802,12 @@ class TagCard extends StatelessWidget {
           children: [
             const Text(
               'Thẻ (Tags)',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Thêm các từ khóa để người dùng dễ dàng tìm thấy công thức của bạn',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
             const SizedBox(height: 8),
             Row(
@@ -546,26 +817,34 @@ class TagCard extends StatelessWidget {
                     controller: controller,
                     decoration: const InputDecoration(
                       hintText: 'Nhập thẻ, ví dụ: "ăn sáng", "healthy"',
+                      border: OutlineInputBorder(),
                     ),
                     onSubmitted: (value) {
                       if (value.trim().isEmpty) return;
-                      onUpdateTags([...tags, value.trim()]);
+                      onUpdateTags([...tags, value.trim().toLowerCase()]);
                       controller.clear();
                     },
                   ),
                 ),
+                const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(Icons.add_circle, color: Colors.blue),
+                  iconSize: 32,
                   onPressed: () {
                     if (controller.text.trim().isEmpty) return;
-                    onUpdateTags([...tags, controller.text.trim()]);
+                    onUpdateTags([
+                      ...tags,
+                      controller.text.trim().toLowerCase(),
+                    ]);
                     controller.clear();
                   },
                 ),
               ],
             ),
+            const SizedBox(height: 8),
             Wrap(
               spacing: 6,
+              runSpacing: 6,
               children: tags
                   .map(
                     (tag) => Chip(
@@ -625,9 +904,9 @@ class _VideoPreviewState extends State<VideoPreview> {
     if (file != null && await file.exists()) {
       controller = VideoPlayerController.file(file);
       await controller!.initialize();
-      setState(() {});
+      if (mounted) setState(() {});
     } else {
-      setState(() {});
+      if (mounted) setState(() {});
     }
   }
 
@@ -648,9 +927,15 @@ class _VideoPreviewState extends State<VideoPreview> {
           decoration: BoxDecoration(
             color: Colors.grey[200],
             borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey),
           ),
-          child: const Center(
-            child: Icon(Icons.video_library, size: 48, color: Colors.grey),
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.video_library, size: 48, color: Colors.grey),
+              SizedBox(height: 8),
+              Text('Thêm video', style: TextStyle(color: Colors.grey)),
+            ],
           ),
         ),
       );
@@ -664,6 +949,12 @@ class _VideoPreviewState extends State<VideoPreview> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: VideoPlayer(controller!),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.black38,
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         IconButton(
@@ -697,9 +988,9 @@ class _VideoPreviewState extends State<VideoPreview> {
             onTap: widget.onRemoveVideo,
             child: Container(
               padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.black54,
+                color: Colors.red,
               ),
               child: const Icon(Icons.delete, color: Colors.white, size: 22),
             ),
