@@ -97,7 +97,10 @@ class _MyRecipesPageState extends State<MyRecipesPage> {
               recipe: recipe,
               currentUser: widget.user,
               onTap: () {
-                context.push('/recipe-detail', extra: recipe);
+                context.push(
+                  '/recipe-detail',
+                  extra: {'recipe': recipe, 'currentUser': widget.user},
+                );
               },
             ),
 

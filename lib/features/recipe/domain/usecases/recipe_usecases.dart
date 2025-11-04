@@ -1,5 +1,6 @@
 import '../entities/recipe_entity.dart';
 import '../repositories/recipe_repository.dart';
+import '../../data/models/recipe_comment.dart';
 
 class GetAllRecipes {
   final RecipeRepository repository;
@@ -49,4 +50,12 @@ class SearchRecipes {
     }
     return repository.searchRecipes(query.toLowerCase());
   }
+}
+
+class AddComment {
+  final RecipeRepository repository;
+  AddComment(this.repository);
+  
+  Future<void> call(String recipeId, RecipeComment comment) =>
+      repository.addComment(recipeId, comment);
 }

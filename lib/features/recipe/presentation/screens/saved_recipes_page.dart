@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../domain/entities/user_entity.dart';
-import '../../../recipe/presentation/bloc/recipe_bloc.dart';
-import '../../../recipe/presentation/widgets/recipe_card.dart';
-import '../bloc/auth_bloc.dart';
+import '../../../auth/domain/entities/user_entity.dart';
+import '../bloc/recipe_bloc.dart';
+import '../widgets/recipe_card.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class SavedRecipesPage extends StatefulWidget {
   final UserEntity user;
@@ -113,7 +113,13 @@ class _SavedRecipesPageState extends State<SavedRecipesPage> {
                         recipe: recipe,
                         currentUser: currentUser,
                         onTap: () {
-                          GoRouter.of(context).push('/recipe-detail', extra: recipe);
+                          GoRouter.of(context).push(
+                            '/recipe-detail',
+                            extra: {
+                              'recipe': recipe,
+                              'currentUser': currentUser,
+                            },
+                          );
                         },
                       );
                     },

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/recipe_entity.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../models/recipe_model.dart';
+import '../models/recipe_comment.dart';
 
 class RecipeRepositoryImpl implements RecipeRepository {
   final FirebaseFirestore firestore;
@@ -43,7 +44,6 @@ class RecipeRepositoryImpl implements RecipeRepository {
       savedBy: recipe.savedBy,
       comments: recipe.comments,
       tags: recipe.tags,
-      searchKeywords: recipe.searchKeywords,
     );
     await recipesCollection.add(recipeModel.toMap());
   }
@@ -63,7 +63,6 @@ class RecipeRepositoryImpl implements RecipeRepository {
       savedBy: recipe.savedBy,
       comments: recipe.comments,
       tags: recipe.tags,
-      searchKeywords: recipe.searchKeywords,
     );
     await recipesCollection.doc(recipe.id).update(recipeModel.toMap());
   }
@@ -88,7 +87,6 @@ class RecipeRepositoryImpl implements RecipeRepository {
     }
   }
 
-
   @override
   Future<void> deleteRecipe(String id) async {
     await recipesCollection.doc(id).delete();
@@ -96,8 +94,10 @@ class RecipeRepositoryImpl implements RecipeRepository {
 
   @override
   Future<List<RecipeEntity>> searchRecipes(String query) async {
+    final lowercaseQuery = query.toLowerCase();
+
     final snapshot = await recipesCollection
-        .where('searchKeywords', arrayContains: query.toLowerCase())
+        .where('tags', arrayContains: lowercaseQuery)
         .get();
 
     return snapshot.docs
@@ -106,5 +106,15 @@ class RecipeRepositoryImpl implements RecipeRepository {
               RecipeModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
         )
         .toList();
+  }
+
+  @override
+  Future<void> addComment(String recipeId, RecipeComment comment) async {
+    final docRef = recipesCollection.doc(recipeId);
+    final commentMap = comment.toMap(); 
+
+    await docRef.update({
+      'comments': FieldValue.arrayUnion([commentMap]),
+    });
   }
 }

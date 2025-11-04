@@ -16,7 +16,6 @@ class RecipeModel extends RecipeEntity {
     List<String> savedBy = const [],
     List<RecipeComment> comments = const [],
     List<String> tags = const [],
-    List<String> searchKeywords = const [], // <-- THÊM DÒNG NÀY
   }) : super(
           id: id,
           title: title,
@@ -30,7 +29,6 @@ class RecipeModel extends RecipeEntity {
           savedBy: savedBy,
           comments: comments,
           tags: tags,
-          searchKeywords: searchKeywords, // <-- THÊM DÒNG NÀY
         );
 
   factory RecipeModel.fromMap(Map<String, dynamic> map, String docId) {
@@ -51,8 +49,6 @@ class RecipeModel extends RecipeEntity {
           .map((e) => RecipeComment.fromMap(e))
           .toList(),
       tags: List<String>.from(map['tags'] ?? []),
-      // Đọc từ firestore, nếu không có thì trả về mảng rỗng
-      searchKeywords: List<String>.from(map['searchKeywords'] ?? []), // <-- THÊM DÒNG NÀY
     );
   }
 
@@ -69,8 +65,6 @@ class RecipeModel extends RecipeEntity {
       'savedBy': savedBy,
       'comments': comments.map((e) => e.toMap()).toList(),
       'tags': tags,
-      // Ghi vào firestore
-      'searchKeywords': searchKeywords, // <-- THÊM DÒNG NÀY
     };
   }
 }

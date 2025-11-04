@@ -1,4 +1,5 @@
 import '../entities/recipe_entity.dart';
+import '../../data/models/recipe_comment.dart';
 
 abstract class RecipeRepository {
   Future<List<RecipeEntity>> getAllRecipes();
@@ -14,4 +15,6 @@ abstract class RecipeRepository {
   Future<void> toggleLike(String recipeId, String userId);
   
   Future<List<RecipeEntity>> searchRecipes(String query);
+
+  Future<void> addComment(String recipeId, RecipeComment comment);
 }

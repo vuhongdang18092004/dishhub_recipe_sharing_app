@@ -128,8 +128,10 @@ class _SearchPageState extends State<SearchPage> {
           recipe: recipe,
           currentUser: widget.user,
           onTap: () {
-            // Navigate đến trang chi tiết
-            context.push('/recipe-detail', extra: recipe);
+            context.push(
+              '/recipe-detail',
+              extra: {'recipe': recipe, 'currentUser': widget.user},
+            );
           },
         );
       },

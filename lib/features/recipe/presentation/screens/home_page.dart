@@ -71,12 +71,16 @@ class _HomePageState extends State<HomePage> {
                       if (state is RecipeSearchLoaded) {
                         final results = state.searchResults;
                         if (results.isEmpty) {
-                          return const Center(child: Text('Không tìm thấy kết quả.'));
+                          return const Center(
+                            child: Text('Không tìm thấy kết quả.'),
+                          );
                         }
                         return _buildRecipeList(context, results, currentUser);
                       }
                       if (state is RecipeSearchError) {
-                        return Center(child: Text('Lỗi tìm kiếm: ${state.message}'));
+                        return Center(
+                          child: Text('Lỗi tìm kiếm: ${state.message}'),
+                        );
                       }
 
                       if (state is RecipeLoading) {
@@ -84,7 +88,9 @@ class _HomePageState extends State<HomePage> {
                       } else if (state is RecipeLoaded) {
                         final recipes = state.recipes;
                         if (recipes.isEmpty) {
-                          return const Center(child: Text('Chưa có công thức nào.'));
+                          return const Center(
+                            child: Text('Chưa có công thức nào.'),
+                          );
                         }
                         return _buildRecipeList(context, recipes, currentUser);
                       } else if (state is RecipeError) {
@@ -104,7 +110,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildRecipeList(
-      BuildContext context, List<RecipeEntity> recipes, UserEntity currentUser) {
+    BuildContext context,
+    List<RecipeEntity> recipes,
+    UserEntity currentUser,
+  ) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: recipes.length,
@@ -114,7 +123,10 @@ class _HomePageState extends State<HomePage> {
           recipe: recipe,
           currentUser: currentUser,
           onTap: () {
-            context.push('/recipe-detail', extra: recipe);
+            context.push(
+              '/recipe-detail',
+              extra: {'recipe': recipe, 'currentUser': currentUser},
+            );
           },
         );
       },

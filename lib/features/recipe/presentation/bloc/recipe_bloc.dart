@@ -1,9 +1,9 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:dishhub_recipe_sharing_app/core/utils/generate_keywords.dart';
+import 'package:rxdart/rxdart.dart';
 import '../../domain/entities/recipe_entity.dart';
 import '../../domain/usecases/recipe_usecases.dart';
-import 'package:rxdart/rxdart.dart';
+import '../../data/models/recipe_comment.dart'; 
 
 part 'recipe_event.dart';
 part 'recipe_state.dart';
@@ -20,6 +20,7 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
   final DeleteRecipe deleteRecipe;
   final ToggleLikeRecipe toggleLikeRecipe;
   final SearchRecipes searchRecipes;
+  final AddComment? addComment; 
 
   List<RecipeEntity> _allRecipes = [];
 
@@ -31,142 +32,127 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     required this.deleteRecipe,
     required this.toggleLikeRecipe,
     required this.searchRecipes,
+    this.addComment, 
   }) : super(RecipeInitial()) {
-    on<LoadAllRecipes>((event, emit) async {
-      emit(RecipeLoading());
-      try {
-        final recipes = await getAllRecipes();
-        _allRecipes = recipes;
-        emit(RecipeLoaded(recipes));
-      } catch (e) {
-        emit(RecipeError(e.toString()));
-      }
-    });
+    on<LoadAllRecipes>(_onLoadAllRecipes);
 
-    on<AddNewRecipe>((event, emit) async {
-      try {
-        final keywords = generateKeywords(
-          event.recipe.title,
-          event.recipe.ingredients,
-          event.recipe.tags,
-        );
-        final recipeWithKeywords = RecipeEntity(
-          id: event.recipe.id,
-          title: event.recipe.title,
-          description: event.recipe.description,
-          photoUrls: event.recipe.photoUrls,
-          videoUrl: event.recipe.videoUrl,
-          creatorId: event.recipe.creatorId,
-          ingredients: event.recipe.ingredients,
-          steps: event.recipe.steps,
-          likes: event.recipe.likes,
-          savedBy: event.recipe.savedBy,
-          comments: event.recipe.comments,
-          tags: event.recipe.tags,
-          searchKeywords: keywords,
-        );
+    on<AddNewRecipe>(_onAddRecipe);
+    on<UpdateExistingRecipe>(_onUpdateRecipe);
+    on<DeleteRecipeById>(_onDeleteRecipe);
 
-        await addRecipe(recipeWithKeywords);
-        add(LoadAllRecipes());
-      } catch (e) {
-        emit(RecipeError(e.toString()));
-      }
-    });
-
-    on<UpdateExistingRecipe>((event, emit) async {
-      try {
-        final keywords = generateKeywords(
-          event.recipe.title,
-          event.recipe.ingredients,
-          event.recipe.tags,
-        );
-        final recipeWithKeywords = RecipeEntity(
-          id: event.recipe.id,
-          title: event.recipe.title,
-          description: event.recipe.description,
-          photoUrls: event.recipe.photoUrls,
-          videoUrl: event.recipe.videoUrl,
-          creatorId: event.recipe.creatorId,
-          ingredients: event.recipe.ingredients,
-          steps: event.recipe.steps,
-          likes: event.recipe.likes,
-          savedBy: event.recipe.savedBy,
-          comments: event.recipe.comments,
-          tags: event.recipe.tags,
-          searchKeywords: keywords,
-        );
-
-        await updateRecipe(recipeWithKeywords);
-        add(LoadAllRecipes());
-      } catch (e) {
-        emit(RecipeError(e.toString()));
-      }
-    });
-
-    on<DeleteRecipeById>((event, emit) async {
-      try {
-        await deleteRecipe(event.id);
-        add(LoadAllRecipes());
-      } catch (e) {
-        emit(RecipeError(e.toString()));
-      }
-    });
-
-    on<ToggleLike>((event, emit) async {
-      final currentState = state;
-      if (currentState is RecipeLoaded) {
-        final updatedList = List<RecipeEntity>.from(currentState.recipes);
-        final index = updatedList.indexWhere((r) => r.id == event.recipeId);
-        if (index != -1) {
-          final recipe = updatedList[index];
-          final newLikes = List<String>.from(recipe.likes);
-          if (newLikes.contains(event.userId)) {
-            newLikes.remove(event.userId);
-          } else {
-            newLikes.add(event.userId);
-          }
-
-          final updatedRecipe = RecipeEntity(
-            id: recipe.id,
-            title: recipe.title,
-            description: recipe.description,
-            photoUrls: recipe.photoUrls,
-            videoUrl: recipe.videoUrl,
-            creatorId: recipe.creatorId,
-            ingredients: recipe.ingredients,
-            steps: recipe.steps,
-            likes: newLikes,
-            savedBy: recipe.savedBy,
-            comments: recipe.comments,
-            tags: recipe.tags,
-          );
-
-          updatedList[index] = updatedRecipe;
-          emit(RecipeLoaded(updatedList));
-
-          try {
-            await toggleLikeRecipe(event.recipeId, event.userId);
-            add(LoadAllRecipes());
-          } catch (e) {
-            emit(currentState);
-            emit(RecipeError(e.toString()));
-          }
-          return;
-        }
-      }
-
-      try {
-        await toggleLikeRecipe(event.recipeId, event.userId);
-        add(LoadAllRecipes());
-      } catch (e) {
-        emit(RecipeError(e.toString()));
-      }
-    });
+    on<ToggleLike>(_onToggleLike);
+    on<AddNewComment>(_onAddComment);
 
     on<SearchRecipesEvent>(
       _onSearchRecipes,
       transformer: debounce(const Duration(milliseconds: 300)),
     );
+  }
+
+  Future<void> _onLoadAllRecipes(
+    LoadAllRecipes event,
+    Emitter<RecipeState> emit,
+  ) async {
+    emit(RecipeLoading());
+    try {
+      final recipes = await getAllRecipes();
+      _allRecipes = recipes;
+      emit(RecipeLoaded(recipes));
+    } catch (e) {
+      print('Lỗi tải công thức: $e');
+      emit(RecipeError(e.toString()));
+    }
+  }
+
+  Future<void> _onAddRecipe(
+    AddNewRecipe event,
+    Emitter<RecipeState> emit,
+  ) async {
+    try {
+      await addRecipe(event.recipe);
+      add(LoadAllRecipes());
+    } catch (e) {
+      emit(RecipeError(e.toString()));
+    }
+  }
+
+  Future<void> _onUpdateRecipe(
+    UpdateExistingRecipe event,
+    Emitter<RecipeState> emit,
+  ) async {
+    try {
+      await updateRecipe(event.recipe);
+      add(LoadAllRecipes());
+    } catch (e) {
+      emit(RecipeError(e.toString()));
+    }
+  }
+
+  Future<void> _onDeleteRecipe(
+    DeleteRecipeById event,
+    Emitter<RecipeState> emit,
+  ) async {
+    try {
+      await deleteRecipe(event.id);
+      add(LoadAllRecipes());
+    } catch (e) {
+      emit(RecipeError(e.toString()));
+    }
+  }
+
+  Future<void> _onToggleLike(
+    ToggleLike event,
+    Emitter<RecipeState> emit,
+  ) async {
+    final currentState = state;
+    
+    if (currentState is RecipeLoaded) {
+      final updatedList = List<RecipeEntity>.from(currentState.recipes);
+      final index = updatedList.indexWhere((r) => r.id == event.recipeId);
+
+      if (index != -1) {
+        final recipe = updatedList[index];
+        final newLikes = List<String>.from(recipe.likes);
+
+        if (newLikes.contains(event.userId)) {
+          newLikes.remove(event.userId);
+        } else {
+          newLikes.add(event.userId);
+        }
+
+        final updatedRecipe = recipe.copyWith(likes: newLikes); 
+
+        updatedList[index] = updatedRecipe;
+        emit(RecipeLoaded(updatedList)); 
+      }
+    }
+
+    try {
+      await toggleLikeRecipe(event.recipeId, event.userId);
+      add(LoadAllRecipes()); 
+    } catch (e) {
+      emit(RecipeError(e.toString())); 
+    }
+  }
+
+  Future<void> _onAddComment(
+    AddNewComment event,
+    Emitter<RecipeState> emit,
+  ) async {
+    if (addComment == null) {
+      print('Lỗi cấu hình: UseCase AddComment chưa được cung cấp.');
+      emit(RecipeError("Cảnh báo: Tính năng bình luận chưa được kích hoạt/cấu hình API."));
+      return;
+    }
+
+    try {
+      await addComment!(event.recipeId, event.comment);
+      add(LoadAllRecipes()); 
+
+    } catch (e) {
+      print('Lỗi gửi comment lên Firestore: $e'); 
+      emit(RecipeError('Không thể thêm bình luận: ${e.toString()}'));
+    }
   }
 
   Future<void> _onSearchRecipes(
@@ -179,11 +165,8 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     }
 
     emit(RecipeSearchLoading());
-
-    final firstWord = event.query.split(' ').first;
-
     try {
-      final recipes = await searchRecipes(firstWord);
+      final recipes = await searchRecipes(event.query);
       emit(RecipeSearchLoaded(recipes));
     } catch (e) {
       emit(RecipeSearchError(e.toString()));

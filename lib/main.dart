@@ -19,7 +19,13 @@ import 'features/recipe/presentation/bloc/recipe_bloc.dart';
 import 'features/recipe/domain/usecases/recipe_usecases.dart';
 import 'features/recipe/data/repositories/recipe_repository_impl.dart';
 
-void main() async {
+import 'features/social/presentation/bloc/social_bloc.dart';
+import 'features/social/data/repositories/social_repository_impl.dart';
+import 'features/social/domain/repositories/social_repository.dart';
+import 'features/social/domain/usecases/follow_user.dart';
+import 'features/social/domain/usecases/unfollow_user.dart';
+
+Future<void> main() async {
   await dotenv.load(fileName: ".env");
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -42,51 +48,73 @@ void main() async {
   if (currentUser != null) {
     final doc = await firestore.collection('users').doc(currentUser.uid).get();
     if (doc.exists) {
+      final data = doc.data()!;
       initialUser = UserEntity(
         id: doc.id,
-        name: doc.data()?['name'] ?? '',
-        email: doc.data()?['email'] ?? '',
-        photo: doc.data()?['photo'],
-        role: doc.data()?['role'] ?? 'user',
-        vip: doc.data()?['vip'] ?? false,
-        recipes: List<String>.from(doc.data()?['recipes'] ?? []),
-        followers: List<String>.from(doc.data()?['followers'] ?? []),
-        following: List<String>.from(doc.data()?['following'] ?? []),
-        savedRecipes: List<String>.from(doc.data()?['savedRecipes'] ?? []),
+        name: data['name'] ?? '',
+        email: data['email'] ?? '',
+        photo: data['photo'],
+        role: data['role'] ?? 'user',
+        vip: data['vip'] ?? false,
+        recipes: List<String>.from(data['recipes'] ?? []),
+        followers: List<String>.from(data['followers'] ?? []),
+        following: List<String>.from(data['following'] ?? []),
+        savedRecipes: List<String>.from(data['savedRecipes'] ?? []),
       );
     }
   }
 
   runApp(
-    MultiBlocProvider(
+    MultiRepositoryProvider(
       providers: [
-        BlocProvider<AuthBloc>(
-          create: (_) => AuthBloc(
-            signUpWithEmail: SignUpWithEmail(authRepository),
-            signInWithEmail: SignInWithEmail(authRepository),
-            signInWithGoogle: SignInWithGoogle(authRepository),
-            resetPassword: ResetPassword(authRepository),
-            signOut: SignOut(authRepository),
-            getCurrentUser: GetCurrentUser(authRepository),
-            toggleSaveRecipe: ToggleSaveRecipe(authRepository),
-            sendEmailVerification: SendEmailVerification(authRepository),
-          )..add(const AuthCheckStatus()),
+        RepositoryProvider<SocialRepository>(
+          create: (_) => SocialRepositoryImpl(firestore),
         ),
-
-        BlocProvider<RecipeBloc>(
-          create: (_) => RecipeBloc(
-            getAllRecipes: GetAllRecipes(recipeRepository),
-            getRecipeById: GetRecipeById(recipeRepository),
-            addRecipe: AddRecipe(recipeRepository),
-            updateRecipe: UpdateRecipe(recipeRepository),
-            deleteRecipe: DeleteRecipe(recipeRepository),
-
-            toggleLikeRecipe: ToggleLikeRecipe(recipeRepository),
-            searchRecipes: SearchRecipes(recipeRepository),
-          )..add(LoadAllRecipes()),
+        RepositoryProvider<FollowUser>(
+          create: (context) => FollowUser(context.read<SocialRepository>()),
+        ),
+        RepositoryProvider<UnfollowUser>(
+          create: (context) => UnfollowUser(context.read<SocialRepository>()),
         ),
       ],
-      child: MyApp(initialUser: initialUser),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>(
+            create: (_) => AuthBloc(
+              signUpWithEmail: SignUpWithEmail(authRepository),
+              signInWithEmail: SignInWithEmail(authRepository),
+              signInWithGoogle: SignInWithGoogle(authRepository),
+              resetPassword: ResetPassword(authRepository),
+              signOut: SignOut(authRepository),
+              getCurrentUser: GetCurrentUser(authRepository),
+              toggleSaveRecipe: ToggleSaveRecipe(authRepository),
+              sendEmailVerification: SendEmailVerification(authRepository),
+            )..add(const AuthCheckStatus()),
+          ),
+
+          BlocProvider<RecipeBloc>(
+            create: (_) => RecipeBloc(
+              getAllRecipes: GetAllRecipes(recipeRepository),
+              getRecipeById: GetRecipeById(recipeRepository),
+              addRecipe: AddRecipe(recipeRepository),
+              updateRecipe: UpdateRecipe(recipeRepository),
+              deleteRecipe: DeleteRecipe(recipeRepository),
+              toggleLikeRecipe: ToggleLikeRecipe(recipeRepository),
+              searchRecipes: SearchRecipes(recipeRepository),
+              addComment: AddComment(recipeRepository),
+            )..add(LoadAllRecipes()),
+          ),
+
+          BlocProvider<SocialBloc>(
+            create: (context) => SocialBloc(
+              repository: context.read<SocialRepository>(),
+              followUser: context.read<FollowUser>(),
+              unfollowUser: context.read<UnfollowUser>(),
+            ),
+          ),
+        ],
+        child: MyApp(initialUser: initialUser),
+      ),
     ),
   );
 }
@@ -94,9 +122,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   final UserEntity? initialUser;
 
-  static final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(
-    ThemeMode.light,
-  );
+  static final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
 
   const MyApp({super.key, this.initialUser});
 
